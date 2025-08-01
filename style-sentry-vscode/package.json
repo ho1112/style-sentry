@@ -3,7 +3,7 @@
   "displayName": "Style Sentry",
   "description": "Linter for CSS design systems to enforce team's coding standards.",
   "version": "0.0.1",
-  "publisher": "Lee HoYeon",
+  "publisher": "leehoyeon",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -19,7 +19,7 @@
     "watch": "tsc -watch -p ./"
   },
   "dependencies": {
-    "style-sentry": "file:../"
+    "style-sentry": "^1.0.0"
   },
   "devDependencies": {
     "@types/vscode": "^1.85.0",

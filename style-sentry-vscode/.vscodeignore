@@ -1,0 +1,7 @@
+**/.vscode/**
+**/.vscode-test/**
+**/node_modules/**
+**/out/test/**
+**/src/**
+**/tsconfig.json
+!node_modules/style-sentry/**
