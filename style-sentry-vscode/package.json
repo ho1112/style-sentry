@@ -1,41 +1,26 @@
-
 {
-    "name": "style-sentry-vscode",
-    "displayName": "Style Sentry",
-    "description": "VSCode extension for Style Sentry",
-    "version": "0.0.1",
-    "engines": {
-        "vscode": "^1.82.0"
-    },
-    "categories": [
-        "Linters"
-    ],
-    "activationEvents": [
-        "onLanguage:css",
-        "onLanguage:scss",
-        "onLanguage:less"
-    ],
-    "main": "./out/extension.js",
-    "contributes": {
-        "configuration": {
-            "title": "Style Sentry",
-            "properties": {
-                "styleSentry.enable": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enable/disable Style Sentry linter."
-                }
-            }
-        }
-    },
-    "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./"
-    },
-    "devDependencies": {
-        "@types/vscode": "^1.82.0",
-        "@types/node": "18.x",
-        "typescript": "^5.1.6"
-    }
+  "name": "style-sentry-vscode",
+  "displayName": "Style Sentry",
+  "description": "Linter for CSS design systems to enforce team's coding standards.",
+  "version": "0.0.1",
+  "publisher": "leehoyeon",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onLanguage:css",
+    "onLanguage:scss",
+    "onLanguage:less"
+  ],
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "18.x",
+    "typescript": "^5.3.3"
+  }
 }

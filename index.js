@@ -99,26 +99,31 @@ function findUnusedClasses(config) {
     const allCssFiles = glob.sync('**/*.{css,scss,less}', { ignore: 'node_modules/**' });
     const jsxFiles = glob.sync('**/*.{jsx,tsx}', { ignore: 'node_modules/**' });
 
-    const definedClassesByFile = new Map(); // Map<filePath, Set<className>>
+    const definedClassesByFile = new Map(); // Map<filePath, Map<className, lineNumber>>
     const usedClassesByFile = new Map(); // Map<filePath, Set<className>>
     const globallyUsedClasses = new Set(); // For non-module classNames
 
     // 1. Parse all CSS/SCSS/Less files to find defined classes
     allCssFiles.forEach(file => {
         const fullPath = path.resolve(process.cwd(), file);
-        definedClassesByFile.set(fullPath, new Set());
+        definedClassesByFile.set(fullPath, new Map());
         usedClassesByFile.set(fullPath, new Set()); // Initialize for every CSS file
 
         const css = fs.readFileSync(file, 'utf8');
         const ext = path.extname(file);
         const parser = ext.includes('scss') ? postcssScss : ext.includes('less') ? postcssLess : postcss;
-        
+
         try {
             const root = parser.parse(css, { from: fullPath });
             root.walkRules(rule => {
                 rule.selectors.forEach(selector => {
                     const matches = selector.match(/\.-?[_a-zA-Z]+[_a-zA-Z0-9-]*/g) || [];
-                    matches.forEach(match => definedClassesByFile.get(fullPath).add(match.substring(1)));
+                    matches.forEach(match => {
+                        const className = match.substring(1);
+                        // Store the line number with the class name, only if it's the first time we see it.
+                        if (!definedClassesByFile.get(fullPath).has(className))
+                            definedClassesByFile.get(fullPath).set(className, rule.source.start.line);
+                    });
                 });
             });
         } catch (e) {
@@ -172,11 +177,12 @@ function findUnusedClasses(config) {
     const unusedClassDetails = [];
     definedClassesByFile.forEach((definedClasses, filePath) => {
         const usedClasses = usedClassesByFile.get(filePath);
-        definedClasses.forEach(cls => {
+        definedClasses.forEach((line, cls) => {
             if (!usedClasses.has(cls) && !globallyUsedClasses.has(cls)) {
                 unusedClassDetails.push({
                     file: path.relative(process.cwd(), filePath),
-                    unusedClass: cls
+                    unusedClass: cls,
+                    line: line
                 });
             }
         });
@@ -283,7 +289,7 @@ program
         const unusedClassViolations = findUnusedClasses(config).map(detail => ({
             rule: 'no-unused-classes',
             file: detail.file,
-            line: 'N/A',
+            line: detail.line,
             message: `Unused class: ${detail.unusedClass}`
         }));
         const colorViolations = checkDesignSystemColors(config);
