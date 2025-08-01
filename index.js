@@ -128,40 +128,44 @@ function findUnusedClasses(config) {
 
     // 2. Parse all JS/JSX/TSX files to find used classes
     jsxFiles.forEach(file => {
-        const code = fs.readFileSync(file, 'utf8');
-        const ast = babelParser.parse(code, { sourceType: 'module', plugins: ['jsx', 'typescript'] });
-        const moduleImports = new Map(); // Map<localName, modulePath>
+        try {
+            const code = fs.readFileSync(file, 'utf8');
+            const ast = babelParser.parse(code, { sourceType: 'module', plugins: ['jsx', 'typescript'] });
+            const moduleImports = new Map(); // Map<localName, modulePath>
 
-        traverse(ast, {
-            ImportDeclaration: ({ node }) => {
-                if (node.source.value.match(/\.(css|scss|less)$/)) {
-                    const fullPath = path.resolve(path.dirname(file), node.source.value);
-                    if (definedClassesByFile.has(fullPath)) { // Only track imports of existing CSS files
-                        const defaultSpecifier = node.specifiers.find(s => s.type === 'ImportDefaultSpecifier' || s.type === 'ImportNamespaceSpecifier');
-                        if (defaultSpecifier) {
-                            moduleImports.set(defaultSpecifier.local.name, fullPath);
+            traverse(ast, {
+                ImportDeclaration: ({ node }) => {
+                    if (node.source.value.match(/\.(css|scss|less)$/)) {
+                        const fullPath = path.resolve(path.dirname(file), node.source.value);
+                        if (definedClassesByFile.has(fullPath)) { // Only track imports of existing CSS files
+                            const defaultSpecifier = node.specifiers.find(s => s.type === 'ImportDefaultSpecifier' || s.type === 'ImportNamespaceSpecifier');
+                            if (defaultSpecifier) {
+                                moduleImports.set(defaultSpecifier.local.name, fullPath);
+                            }
                         }
                     }
-                }
-            },
-            MemberExpression: ({ node }) => {
-                if (node.object.type === 'Identifier' && moduleImports.has(node.object.name)) {
-                    const modulePath = moduleImports.get(node.object.name);
-                    const usedSet = usedClassesByFile.get(modulePath);
-                    if (node.property.type === 'Identifier') {
-                        usedSet.add(node.property.name);
-                    } else if (node.property.type === 'StringLiteral') {
-                        usedSet.add(node.property.value);
+                },
+                MemberExpression: ({ node }) => {
+                    if (node.object.type === 'Identifier' && moduleImports.has(node.object.name)) {
+                        const modulePath = moduleImports.get(node.object.name);
+                        const usedSet = usedClassesByFile.get(modulePath);
+                        if (node.property.type === 'Identifier') {
+                            usedSet.add(node.property.name);
+                        } else if (node.property.type === 'StringLiteral') {
+                            usedSet.add(node.property.value);
+                        }
+                    }
+                },
+                JSXAttribute: ({ node }) => {
+                    if (node.name.name === 'className' && node.value.type === 'StringLiteral') {
+                        const classList = node.value.value.split(' ').filter(Boolean);
+                        classList.forEach(cls => globallyUsedClasses.add(cls));
                     }
                 }
-            },
-            JSXAttribute: ({ node }) => {
-                if (node.name.name === 'className' && node.value.type === 'StringLiteral') {
-                    const classList = node.value.value.split(' ').filter(Boolean);
-                    classList.forEach(cls => globallyUsedClasses.add(cls));
-                }
-            }
-        });
+            });
+        } catch (e) {
+            console.error(chalk.yellow(`Warning: Could not parse ${file}. It may contain syntax errors. Error: ${e.message}`));
+        }
     });
 
     // 3. Compare defined and used classes for each file
