@@ -1,0 +1,14 @@
+# Exclude VSCode extension source code
+style-guard-vscode/
+
+# Exclude test directory
+test/
+
+# Exclude common development files
+.git/
+.gitignore
+.DS_Store
+npm-debug.log
+
+# Exclude node_modules
+node_modules/

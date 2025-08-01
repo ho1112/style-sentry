@@ -1,0 +1,35 @@
+{
+  "name": "@mintora/style-guard",
+  "version": "1.0.0",
+  "main": "index.js",
+  "bin": {
+    "style-guard": "./index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "description": "A custom CSS linter and VSCode extension to enforce team's design system rules.",
+  "keywords": [
+    "css",
+    "linter",
+    "style",
+    "guard",
+    "vscode",
+    "design-system",
+    "code-quality"
+  ],
+  "author": "Lee Ho Yeon",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/traverse": "^7.28.0",
+    "chalk": "^4.1.2",
+    "commander": "^14.0.0",
+    "glob": "^11.0.3",
+    "postcss-less": "^6.0.0"
+  },
+  "devDependencies": {
+    "@babel/parser": "^7.28.0",
+    "postcss": "^8.5.6",
+    "postcss-scss": "^4.0.9"
+  }
+}

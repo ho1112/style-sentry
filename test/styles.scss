@@ -1,0 +1,12 @@
+
+$primary-color: #FF0000;
+
+.scss-used-class {
+  color: $primary-color; // Allowed
+  background-color: #ABCDEF; // Not Allowed
+}
+
+.scss-unused-class {
+  font-size: 35px; // Exceeds threshold
+  z-index: 200; // Exceeds threshold
+}

@@ -1,0 +1,41 @@
+
+{
+    "name": "style-guard-vscode",
+    "displayName": "Style Guard",
+    "description": "VSCode extension for Style Guard",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.82.0"
+    },
+    "categories": [
+        "Linters"
+    ],
+    "activationEvents": [
+        "onLanguage:css",
+        "onLanguage:scss",
+        "onLanguage:less"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "configuration": {
+            "title": "Style Guard",
+            "properties": {
+                "styleGuard.enable": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable/disable Style Guard linter."
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.82.0",
+        "@types/node": "18.x",
+        "typescript": "^5.1.6"
+    }
+}

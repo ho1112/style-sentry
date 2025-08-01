@@ -1,0 +1,26 @@
+
+.used-class {
+  color: red; /* Allowed */
+  background-color: #123456; /* Not Allowed */
+}
+
+.unused-class {
+  color: blue;
+}
+
+.another-used-class {
+    font-size: 16px;
+    border: 1px solid #000000; /* Allowed */
+}
+
+.high-z-index {
+    z-index: 150; /* Exceeds threshold */
+}
+
+.low-z-index {
+    z-index: 50; /* Below threshold */
+}
+
+.large-font {
+    font-size: 40px; /* Exceeds threshold of 32px */
+}

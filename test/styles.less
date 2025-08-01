@@ -1,0 +1,12 @@
+
+@primary-color: #00FF00;
+
+.less-used-class {
+  color: @primary-color; // Allowed
+  border-color: #112233; // Not Allowed
+}
+
+.less-unused-class {
+  font-size: 40px; // Exceeds threshold
+  z-index: 250; // Exceeds threshold
+}
