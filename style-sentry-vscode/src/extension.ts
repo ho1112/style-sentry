@@ -12,7 +12,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Resolve the path to the CLI script relative to the extension's location.
     // This makes it work during development without needing a global install.
-    cliPath = path.resolve(context.extensionPath, '../../index.js');
+    cliPath = require.resolve('style-sentry');
 
     // Run on save
     context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(document => {
