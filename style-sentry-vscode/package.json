@@ -1,8 +1,8 @@
 
 {
-    "name": "style-guard-vscode",
-    "displayName": "Style Guard",
-    "description": "VSCode extension for Style Guard",
+    "name": "style-sentry-vscode",
+    "displayName": "Style Sentry",
+    "description": "VSCode extension for Style Sentry",
     "version": "0.0.1",
     "engines": {
         "vscode": "^1.82.0"
@@ -18,12 +18,12 @@
     "main": "./out/extension.js",
     "contributes": {
         "configuration": {
-            "title": "Style Guard",
+            "title": "Style Sentry",
             "properties": {
-                "styleGuard.enable": {
+                "styleSentry.enable": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Enable/disable Style Guard linter."
+                    "description": "Enable/disable Style Sentry linter."
                 }
             }
         }

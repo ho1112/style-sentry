@@ -41,20 +41,20 @@ const defaultConfig = `module.exports = {
 // Command to initialize config
 program
     .command('init')
-    .description('Create a default .styleguardrc.js configuration file.')
+    .description('Create a default .stylesentryrc.js configuration file.')
     .action(() => {
-        const configPath = path.resolve(process.cwd(), '.styleguardrc.js');
+        const configPath = path.resolve(process.cwd(), '.stylesentryrc.js');
         if (fs.existsSync(configPath)) {
-            console.log(chalk.yellow('.styleguardrc.js already exists.'));
+            console.log(chalk.yellow('.stylesentryrc.js already exists.'));
             return;
         }
         fs.writeFileSync(configPath, defaultConfig);
-        console.log(chalk.green('Successfully created .styleguardrc.js'));
+        console.log(chalk.green('Successfully created .stylesentryrc.js'));
     });
 
 // Function to load configuration
 function loadConfig(configPath) {
-    const resolvedPath = path.resolve(process.cwd(), configPath || '.styleguardrc.js');
+    const resolvedPath = path.resolve(process.cwd(), configPath || '.stylesentryrc.js');
     if (fs.existsSync(resolvedPath)) {
         try {
             return require(resolvedPath);
@@ -269,9 +269,9 @@ program
         
         if (Object.keys(config).length === 0 || !config.rules) {
             if (options.json) {
-                console.log(JSON.stringify({ error: 'No configuration found. Run "style-guard init" to create a config file.' }, null, 2));
+                console.log(JSON.stringify({ error: 'No configuration found. Run "style-sentry init" to create a config file.' }, null, 2));
             } else {
-                console.log(chalk.red('No configuration found. Run "style-guard init" to create a config file.'));
+                console.log(chalk.red('No configuration found. Run "style-sentry init" to create a config file.'));
             }
             return;
         }
@@ -295,7 +295,7 @@ program
                 return;
             }
 
-            console.log(chalk.cyan.bold('Style Guard Linting Report'));
+            console.log(chalk.cyan.bold('Style Sentry Linting Report'));
             console.log(chalk.cyan('============================'));
 
             if (unusedClassViolations.length > 0) {

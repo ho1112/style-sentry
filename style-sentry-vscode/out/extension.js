@@ -6,7 +6,7 @@ const vscode = require("vscode");
 const child_process_1 = require("child_process");
 let diagnosticCollection;
 function activate(context) {
-    diagnosticCollection = vscode.languages.createDiagnosticCollection('style-guard');
+    diagnosticCollection = vscode.languages.createDiagnosticCollection('style-sentry');
     context.subscriptions.push(diagnosticCollection);
     // Run on save
     context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(document => {
@@ -29,10 +29,10 @@ function lintDocument(document) {
     if (!workspaceFolder) {
         return;
     }
-    const command = `style-guard --json`;
+    const command = `style-sentry --json`;
     (0, child_process_1.exec)(command, { cwd: workspaceFolder.uri.fsPath }, (err, stdout, stderr) => {
         if (err && !stdout) { // Real error
-            vscode.window.showErrorMessage(`Style Guard error: ${stderr}`);
+            vscode.window.showErrorMessage(`Style Sentry error: ${stderr}`);
             return;
         }
         try {
@@ -45,13 +45,13 @@ function lintDocument(document) {
                 }
                 const range = new vscode.Range(new vscode.Position(violation.line - 1, 0), new vscode.Position(violation.line - 1, Number.MAX_VALUE));
                 const diagnostic = new vscode.Diagnostic(range, violation.message, vscode.DiagnosticSeverity.Warning);
-                diagnostic.source = 'Style Guard';
+                diagnostic.source = 'Style Sentry';
                 diagnostics.push(diagnostic);
             });
             diagnosticCollection.set(document.uri, diagnostics);
         }
         catch (e) {
-            vscode.window.showErrorMessage(`Error parsing Style Guard output: ${e}`);
+            vscode.window.showErrorMessage(`Error parsing Style Sentry output: ${e}`);
         }
     });
 }

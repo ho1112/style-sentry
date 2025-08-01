@@ -1,9 +1,9 @@
 {
-  "name": "@mintora/style-guard",
+  "name": "style-sentry",
   "version": "1.0.0",
   "main": "index.js",
   "bin": {
-    "style-guard": "./index.js"
+    "style-sentry": "./index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -11,14 +11,18 @@
   "description": "A custom CSS linter and VSCode extension to enforce team's design system rules.",
   "keywords": [
     "css",
+    "sass",
+    "scss",
+    "less",
     "linter",
     "style",
     "guard",
+    "sentry",
     "vscode",
     "design-system",
     "code-quality"
   ],
-  "author": "Lee Ho Yeon",
+  "author": "Lee HoYeon",
   "license": "ISC",
   "dependencies": {
     "@babel/traverse": "^7.28.0",
