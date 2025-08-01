@@ -13,6 +13,45 @@ const chalk = require('chalk');
 
 const program = new Command();
 
+const defaultConfig = `module.exports = {
+  rules: {
+    // Rule: 'no-unused-classes'
+    // Finds CSS classes that are defined but not used in your JSX/TSX files.
+    // Enabled by default.
+    'no-unused-classes': true,
+
+    // Rule: 'design-system-colors'
+    // Checks if the colors used are from your design system's palette.
+    // To enable, uncomment the 'allowedColors' array and add your colors.
+    'design-system-colors': {
+      // allowedColors: ['#FFFFFF', '#000000', 'blue', 'red', 'green'],
+    },
+
+    // Rule: 'numeric-property-limits'
+    // Checks for limits on numeric CSS properties.
+    // To enable, uncomment the properties you want to check.
+    'numeric-property-limits': {
+      // 'z-index': { threshold: 100, operator: '>=' },
+      // 'font-size': { threshold: 32, operator: '>=' },
+    },
+  },
+};
+`;
+
+// Command to initialize config
+program
+    .command('init')
+    .description('Create a default .styleguardrc.js configuration file.')
+    .action(() => {
+        const configPath = path.resolve(process.cwd(), '.styleguardrc.js');
+        if (fs.existsSync(configPath)) {
+            console.log(chalk.yellow('.styleguardrc.js already exists.'));
+            return;
+        }
+        fs.writeFileSync(configPath, defaultConfig);
+        console.log(chalk.green('Successfully created .styleguardrc.js'));
+    });
+
 // Function to load configuration
 function loadConfig(configPath) {
     const resolvedPath = path.resolve(process.cwd(), configPath || '.styleguardrc.js');
@@ -130,9 +169,6 @@ function findUnusedClasses(config) {
     definedClassesByFile.forEach((definedClasses, filePath) => {
         const usedClasses = usedClassesByFile.get(filePath);
         definedClasses.forEach(cls => {
-            // A class is unused if:
-            // - It's not in the file-specific used set, AND
-            // - It's not in the globally used set (for className="...")
             if (!usedClasses.has(cls) && !globallyUsedClasses.has(cls)) {
                 unusedClassDetails.push({
                     file: path.relative(process.cwd(), filePath),
@@ -148,7 +184,9 @@ function findUnusedClasses(config) {
 // Rule 2: Check for design system colors
 function checkDesignSystemColors(config) {
     const ruleConfig = config.rules['design-system-colors'];
-    if (!ruleConfig) return [];
+    if (!ruleConfig || !Array.isArray(ruleConfig.allowedColors) || ruleConfig.allowedColors.length === 0) {
+        return [];
+    }
 
     const { allowedColors } = ruleConfig;
     const fileParsers = getCssFilesAndParsers();
@@ -159,7 +197,6 @@ function checkDesignSystemColors(config) {
         const css = fs.readFileSync(file, 'utf8');
         const root = fileParsers[file].parse(css);
         root.walkDecls(/color|background|border/, decl => {
-            // Skip color validation for declarations that use preprocessor variables
             if (decl.value.includes('$') || decl.value.includes('@')) {
                 violations.push({ rule: 'design-system-colors', file, line: decl.source.start.line, message: `Preprocessor variable used: ${decl.value}. Direct color validation skipped.` });
                 return;
@@ -194,31 +231,17 @@ function checkNumericPropertyLimits(config) {
             const { threshold, operator } = ruleConfig[property];
             root.walkDecls(property, decl => {
                 const value = parseFloat(decl.value);
-                if (isNaN(value)) return; // Skip if value is not a number
+                if (isNaN(value)) return;
 
                 let isViolated = false;
                 switch (operator) {
-                    case '>=':
-                        isViolated = value >= threshold;
-                        break;
-                    case '>':
-                        isViolated = value > threshold;
-                        break;
-                    case '<=':
-                        isViolated = value <= threshold;
-                        break;
-                    case '<':
-                        isViolated = value < threshold;
-                        break;
-                    case '==':
-                        isViolated = value == threshold;
-                        break;
-                    case '!=':
-                        isViolated = value != threshold;
-                        break;
-                    default:
-                        // Default to >= if operator is not specified or invalid
-                        isViolated = value >= threshold;
+                    case '>=': isViolated = value >= threshold; break;
+                    case '>': isViolated = value > threshold; break;
+                    case '<=': isViolated = value <= threshold; break;
+                    case '<': isViolated = value < threshold; break;
+                    case '==': isViolated = value == threshold; break;
+                    case '!=': isViolated = value != threshold; break;
+                    default: isViolated = value >= threshold;
                 }
 
                 if (isViolated) {
@@ -244,11 +267,11 @@ program
         const options = program.opts();
         const config = loadConfig(options.config);
         
-        if (Object.keys(config).length === 0) {
+        if (Object.keys(config).length === 0 || !config.rules) {
             if (options.json) {
-                console.log(JSON.stringify({ error: 'No configuration found.' }, null, 2));
+                console.log(JSON.stringify({ error: 'No configuration found. Run "style-guard init" to create a config file.' }, null, 2));
             } else {
-                console.log(chalk.red('No configuration found. Aborting.'));
+                console.log(chalk.red('No configuration found. Run "style-guard init" to create a config file.'));
             }
             return;
         }
@@ -267,6 +290,11 @@ program
         if (options.json) {
             console.log(JSON.stringify(allViolations, null, 2));
         } else {
+            if (allViolations.length === 0) {
+                console.log(chalk.green.bold('✨ No linting issues found. Your styles are looking great!'));
+                return;
+            }
+
             console.log(chalk.cyan.bold('Style Guard Linting Report'));
             console.log(chalk.cyan('============================'));
 

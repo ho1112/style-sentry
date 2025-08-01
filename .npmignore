@@ -4,6 +4,9 @@ style-guard-vscode/
 # Exclude test directory
 test/
 
+# Exclude local config
+.styleguardrc.js
+
 # Exclude common development files
 .git/
 .gitignore
