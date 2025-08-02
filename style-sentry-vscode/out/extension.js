@@ -71,8 +71,11 @@ function lintDocument(document) {
             const diagnostics = [];
             const currentFileRelativePath = path.relative(workspaceFolder.uri.fsPath, document.uri.fsPath);
             violations.forEach((violation) => {
+                // Normalize both paths to ensure consistent matching
+                const normalizedViolationFile = path.normalize(violation.file);
+                const normalizedCurrentFile = path.normalize(currentFileRelativePath);
                 // Only show diagnostics for the current document
-                if (violation.file === currentFileRelativePath) {
+                if (normalizedViolationFile === normalizedCurrentFile) {
                     // The CLI now provides a line number, use it.
                     // VSCode lines are 0-based, so we subtract 1.
                     const line = violation.line - 1;
