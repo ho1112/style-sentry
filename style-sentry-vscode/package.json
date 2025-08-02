@@ -2,7 +2,7 @@
   "name": "style-sentry-vscode",
   "displayName": "Style Sentry",
   "description": "Linter for CSS design systems to enforce team's coding standards.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "leehoyeon",
   "engines": {
     "vscode": "^1.85.0"
@@ -18,6 +18,11 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ho1112/style-sentry.git"
+  },
+  "license": "ISC",
   "dependencies": {
     "style-sentry": "^1.0.0"
   },

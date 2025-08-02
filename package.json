@@ -1,6 +1,6 @@
 {
   "name": "style-sentry",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.js",
   "bin": {
     "style-sentry": "./index.js"
@@ -24,6 +24,10 @@
   ],
   "author": "Lee HoYeon",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ho1112/style-sentry.git"
+  },
   "dependencies": {
     "@babel/traverse": "^7.28.0",
     "chalk": "^4.1.2",

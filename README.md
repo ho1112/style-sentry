@@ -38,6 +38,16 @@ To build and install the VSCode extension:
 3.  Run `npm run compile` to compile the TypeScript code.
 4.  In VSCode, open the Extensions view, click the `...` menu, select `Install from VSIX...`, and choose the `style-sentry-vscode-0.0.1.vsix` file.
 
+### Getting Started
+
+Before using Style Sentry, you need a `.stylesentryrc.js` configuration file in your project root. To easily generate this file, run the following command:
+
+```bash
+npx style-sentry init
+```
+
+This command will create a `.stylesentryrc.js` file with a basic configuration.
+
 ### Configuration
 
 Style Sentry is configured using a `.stylesentryrc.js` file in the root of your project. Here is an example configuration:
@@ -106,6 +116,16 @@ VSCode拡張機能をビルドしてインストールするには:
 3.  `npm run compile` コマンドでTypeScriptコードをコンパイルします。
 4.  VSCodeの拡張機能ビューで `...` メニューをクリックし、「VSIXからインストール...」を選択して `style-sentry-vscode-0.0.1.vsix` ファイルをインストールします。
 
+### はじめに
+
+Style Sentryを使用する前に、プロジェクトのルートに `.stylesentryrc.js` 設定ファイルが必要です。このファイルを簡単に生成するには、次のコマンドを実行します:
+
+```bash
+npx style-sentry init
+```
+
+このコマンドは、基本的な設定を持つ `.stylesentryrc.js` ファイルを生成します。
+
 ### 設定
 
 Style Sentryは、プロジェクトのルートにある `.stylesentryrc.js` ファイルで設定します。以下は設定例です:
@@ -173,6 +193,16 @@ VSCode 확장 프로그램을 빌드하고 설치하려면:
 2.  `npm install` 명령으로 의존성을 설치합니다.
 3.  `npm run compile` 명령으로 TypeScript 코드를 컴파일합니다.
 4.  VSCode의 확장 프로그램 뷰에서 `...` 메뉴를 클릭한 후, `VSIX에서 설치...`를 선택하여 `style-sentry-vscode-0.0.1.vsix` 파일을 설치합니다.
+
+### 시작하기
+
+Style Sentry를 사용하기 전에 프로젝트 루트에 `.stylesentryrc.js` 설정 파일이 필요합니다. 이 파일을 쉽게 생성하려면 다음 명령어를 실행하세요:
+
+```bash
+npx style-sentry init
+```
+
+이 명령어는 기본 설정이 포함된 `.stylesentryrc.js` 파일을 생성합니다.
 
 ### 설정
 
