@@ -27,20 +27,11 @@ Style Sentry is a custom CSS linter and VSCode extension designed to enforce you
 
 #### CLI Tool
 
-To use the Style Sentry CLI, install it globally from the project root:
+To use the Style Sentry CLI, install it globally:
 
 ```bash
-npm install -g .
+npm install -g style-sentry
 ```
-
-#### VSCode Extension
-
-To build and install the VSCode extension:
-
-1.  Navigate to the `style-sentry-vscode` directory.
-2.  Run `npm install` to install dependencies.
-3.  Run `npm run compile` to compile the TypeScript code.
-4.  In VSCode, open the Extensions view, click the `...` menu, select `Install from VSIX...`, and choose the `style-sentry-vscode-0.0.1.vsix` file.
 
 ### Getting Started
 
@@ -89,7 +80,9 @@ style-sentry --json
 
 #### VSCode Extension
 
-Once the extension is installed and enabled, it will automatically lint your CSS files when you open or save them. Errors and warnings will be displayed directly in the editor.
+Enhance your development workflow with the Style Sentry VS Code Extension. It provides real-time linting directly in your editor, displaying errors and warnings as you type or save. This offers immediate feedback and a seamless integration with your coding environment.
+
+Install it from the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=leehoyeon.style-sentry-vscode).
 
 ---
 
@@ -105,20 +98,11 @@ Once the extension is installed and enabled, it will automatically lint your CSS
 
 #### CLIツール
 
-Style Sentry CLIを使用するには、プロジェクトのルートで次のコマンドを実行してグローバルにインストールします:
+Style Sentry CLIを使用するには、グローバルにインストールします:
 
 ```bash
-npm install -g .
+npm install -g style-sentry
 ```
-
-#### VSCode拡張機能
-
-VSCode拡張機能をビルドしてインストールするには:
-
-1.  `style-sentry-vscode` ディレクトリに移動します。
-2.  `npm install` コマンドで依存関係をインストールします。
-3.  `npm run compile` コマンドでTypeScriptコードをコンパイルします。
-4.  VSCodeの拡張機能ビューで `...` メニューをクリックし、「VSIXからインストール...」を選択して `style-sentry-vscode-0.0.1.vsix` ファイルをインストールします。
 
 ### はじめに
 
@@ -167,7 +151,11 @@ style-sentry --json
 
 #### VSCode拡張機能
 
-拡張機能がインストールされて有効になると、CSSファイルを開いたり保存したりするたびに自動的にリンティングが実行されます。エラーや警告はエディタに直接表示されます。
+#### VSCode拡張機能
+
+Style Sentry VS Code拡張機能で開発ワークフローを強化しましょう。この拡張機能は、入力または保存時にエディターで直接リアルタイムリンティングを提供し、即座のフィードバックとコーディング環境とのシームレスな統合を実現します。
+
+[Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=leehoyeon.style-sentry-vscode)からインストールしてください。
 
 ---
 
@@ -183,20 +171,11 @@ style-sentry --json
 
 #### CLI 도구
 
-Style Sentry CLI를 사용하려면, 프로젝트 루트에서 다음 명령어로 전역 설치합니다:
+Style Sentry CLI를 사용하려면, 전역 설치합니다:
 
 ```bash
-npm install -g .
+npm install -g style-sentry
 ```
-
-#### VSCode 확장 프로그램
-
-VSCode 확장 프로그램을 빌드하고 설치하려면:
-
-1.  `style-sentry-vscode` 디렉토리로 이동합니다.
-2.  `npm install` 명령으로 의존성을 설치합니다.
-3.  `npm run compile` 명령으로 TypeScript 코드를 컴파일합니다.
-4.  VSCode의 확장 프로그램 뷰에서 `...` 메뉴를 클릭한 후, `VSIX에서 설치...`를 선택하여 `style-sentry-vscode-0.0.1.vsix` 파일을 설치합니다.
 
 ### 시작하기
 
@@ -245,4 +224,6 @@ style-sentry --json
 
 #### VSCode 확장 프로그램
 
-확장 프로그램이 설치되고 활성화되면, CSS 파일을 열거나 저장할 때 자동으로 린팅을 수행합니다. 에러와 경고는 편집기 상에 직접 표시됩니다.
+Style Sentry VS Code 확장 프로그램으로 개발 워크플로우를 향상시키세요. 이 확장 프로그램은 코드를 입력하거나 저장할 때 에디터에서 직접 실시간 린팅을 제공하여 즉각적인 피드백과 코딩 환경과의 원활한 통합을 제공합니다.
+
+[Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=leehoyeon.style-sentry-vscode)에서 설치할 수 있습니다.

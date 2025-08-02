@@ -43,6 +43,8 @@ Once the extension is installed and you have a `.stylesentryrc.js` file in your 
 
 Style Sentry's behavior is entirely controlled by the `.stylesentryrc.js` file in your project root. Refer to the [Style Sentry CLI documentation](https://github.com/ho1112/style-sentry.git#configuration) for detailed information on how to configure rules.
 
+You can also find the Style Sentry CLI package on [npm](https://www.npmjs.com/package/style-sentry).
+
 ## Installation
 
 1.  Open VS Code.
@@ -90,6 +92,8 @@ Style Sentry VS Code 拡張機能を使用するには、プロジェクトの�
 
 Style Sentry の動作は、プロジェクトのルートにある `.stylesentryrc.js` ファイルによって完全に制御されます。ルールの設定方法の詳細については、[Style Sentry CLI ドキュメント](https://github.com/ho1112/style-sentry.git#configuration)を参照してください。
 
+[npm](https://www.npmjs.com/package/style-sentry)でStyle Sentry CLIパッケージも見つけることができます。
+
 ## インストール
 
 1.  VS Code を開きます。
@@ -136,6 +140,8 @@ Style Sentry VS Code 확장 프로그램을 사용하려면 프로젝트 루트�
 ## 설정
 
 Style Sentry의 동작은 프로젝트 루트의 `.stylesentryrc.js` 파일에 의해 전적으로 제어됩니다. 규칙 구성 방법에 대한 자세한 내용은 [Style Sentry CLI 문서](https://github.com/ho1112/style-sentry.git#configuration)를 참조하십시오.
+
+[npm](https://www.npmjs.com/package/style-sentry)에서 Style Sentry CLI 패키지도 찾을 수 있습니다.
 
 ## 설치
 
