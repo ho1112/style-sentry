@@ -1,17 +1,16 @@
-# Exclude VSCode extension source code
+# Exclude VSCode extension
 style-sentry-vscode/
 
-# Exclude test directory
+# Exclude tests
 test/
 
 # Exclude local config
 .stylesentryrc.js
 
-# Exclude common development files
+# Exclude common development files and directories
 .git/
 .gitignore
 .DS_Store
-npm-debug.log
-
-# Exclude node_modules
+npm-debug.log*
 node_modules/
+coverage/
