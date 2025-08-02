@@ -1,3 +1,12 @@
-# Ignore environment variables file
-.env
+# Dependencies
+/node_modules
+
+# Build output
+/out
 *.vsix
+
+# Environment variables
+.env
+
+# macOS
+.DS_Store
