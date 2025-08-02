@@ -1,6 +1,6 @@
 {
   "name": "style-sentry",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "index.js",
   "bin": {
     "style-sentry": "./index.js"

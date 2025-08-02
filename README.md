@@ -1,5 +1,9 @@
 # Style Sentry
 
+<p align="center">
+  <img src="./images/style-sentry_256.png" alt="Style Sentry Logo">
+</p>
+
 Style Sentry is a custom CSS linter and VSCode extension designed to enforce your team's design system and coding standards.
 
 ---
