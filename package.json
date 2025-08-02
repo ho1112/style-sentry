@@ -1,6 +1,6 @@
 {
   "name": "style-sentry",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "main": "index.js",
   "bin": {
     "style-sentry": "./index.js"
@@ -33,11 +33,11 @@
     "chalk": "^4.1.2",
     "commander": "^14.0.0",
     "glob": "^11.0.3",
-    "postcss-less": "^6.0.0"
-  },
-  "devDependencies": {
+    "postcss-less": "^6.0.0",
     "@babel/parser": "^7.28.0",
     "postcss": "^8.5.6",
     "postcss-scss": "^4.0.9"
+  },
+  "devDependencies": {
   }
 }
