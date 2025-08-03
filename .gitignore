@@ -19,3 +19,6 @@ yarn-error.log*
 /style-sentry-vscode/out/
 /style-sentry-vscode/*.vsix
 /style-sentry-vscode/.env
+
+# document
+PORTFOLIO.md
