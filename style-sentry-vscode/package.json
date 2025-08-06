@@ -2,11 +2,54 @@
   "name": "style-sentry-vscode",
   "displayName": "Style Sentry",
   "description": "Linter for CSS design systems to enforce team's coding standards.",
-  "version": "0.0.9",
+  "version": "1.0.0",
   "publisher": "leehoyeon",
   "icon": "images/style-sentry_128.png",
   "engines": {
     "vscode": "^1.85.0"
+  },
+  "contributes": {
+    "configuration": {
+      "title": "Style Sentry",
+      "properties": {
+        "style-sentry.rules.no-unused-classes": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable or disable the rule to find unused CSS classes. (Default: true)"
+        },
+        "style-sentry.rules.design-system-colors.allowedColors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "A list of allowed color values for the design system. Example: [\"#FFFFFF\", \"#000000\", \"blue\", \"red\"]"
+        },
+        "style-sentry.rules.numeric-property-limits": {
+          "type": "object",
+          "description": "Define limits for numeric CSS properties. Keys are CSS property names (e.g., 'width', 'height', 'padding'). Example: {\"z-index\": {\"threshold\": 100, \"operator\": \">=\"}, \"font-size\": {\"threshold\": 32, \"operator\": \">=\"}}",
+          "patternProperties": {
+            "^[a-zA-Z-]+$": {
+              "type": "object",
+              "properties": {
+                "threshold": {
+                  "type": "number",
+                  "description": "The numeric threshold for the property."
+                },
+                "operator": {
+                  "type": "string",
+                  "enum": [">=", "<=", ">", "<", "=="],
+                  "description": "The comparison operator (e.g., '>=', '<=')."
+                }
+              },
+              "required": ["threshold", "operator"],
+              "additionalProperties": false
+            }
+          },
+          "default": {}
+        }
+      }
+    }
   },
   "main": "./out/extension.js",
   "activationEvents": [
