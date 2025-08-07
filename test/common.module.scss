@@ -1,3 +1,18 @@
 .wrapper {
   border: 1px solid blue;
+
+    &.top {
+    font-size: 13px;
+  }
+}
+
+.usedWrapper {
+
+  &.used {
+    color: red;
+  }
+
+  &.unused {
+    color: blue;
+  }
 }

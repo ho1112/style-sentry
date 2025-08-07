@@ -31,6 +31,16 @@ export function activate(context: vscode.ExtensionContext) {
             debounceLint(document);
         }
     }));
+
+    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
+        if (e.affectsConfiguration('style-sentry')) {
+            vscode.window.visibleTextEditors.forEach(editor => {
+                if (isCssFile(editor.document)) {
+                    debounceLint(editor.document);
+                }
+            });
+        }
+    }));
 }
 
 function isCssFile(document: vscode.TextDocument): boolean {
@@ -58,9 +68,24 @@ function lintDocument(document: vscode.TextDocument) {
     const rulesConfig: any = {};
 
     // no-unused-classes
-    const noUnusedClasses = config.get<boolean>('rules.no-unused-classes');
-    if (noUnusedClasses !== undefined) {
-        rulesConfig['no-unused-classes'] = noUnusedClasses;
+    const isUnusedClassRuleEnabled = config.get<boolean>('rules.no-unused-classes.enabled');
+    const ignorePatterns = config.get<string[]>('rules.no-unused-classes.ignorePatterns');
+    const ignoreDynamicClasses = config.get<boolean>('rules.no-unused-classes.ignoreDynamicClasses');
+
+    if (isUnusedClassRuleEnabled !== undefined) {
+        const noUnusedClassesCliConfig: { enabled: boolean; ignorePatterns?: string[]; ignoreDynamicClasses?: boolean } = {
+            enabled: isUnusedClassRuleEnabled
+        };
+
+        if (isUnusedClassRuleEnabled) {
+            if (ignorePatterns) {
+                noUnusedClassesCliConfig.ignorePatterns = ignorePatterns;
+            }
+        }
+        if (ignoreDynamicClasses !== undefined) {
+            noUnusedClassesCliConfig.ignoreDynamicClasses = ignoreDynamicClasses;
+        }
+        rulesConfig['no-unused-classes'] = noUnusedClassesCliConfig;
     }
 
     // design-system-colors
@@ -85,9 +110,17 @@ function lintDocument(document: vscode.TextDocument) {
 
         const command = `node "${cliPath}" --json --config "${tempConfigPath}"`;
         exec(command, { cwd: workspaceFolder.uri.fsPath, maxBuffer: 1024 * 1024 * 10 }, (err, stdout, stderr) => {
+            console.log('Style Sentry CLI stdout:', stdout);
+            console.log('Style Sentry CLI stderr:', stderr);
             try {
                 if (err && !stdout) {
                     vscode.window.showErrorMessage(`Style Sentry error: ${stderr}`);
+                    return;
+                }
+
+                // If no-unused-classes rule is disabled, clear diagnostics for this rule
+                if (!isUnusedClassRuleEnabled) {
+                    diagnosticCollection.set(document.uri, []); // Clear diagnostics for the current document
                     return;
                 }
 

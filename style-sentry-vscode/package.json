@@ -2,7 +2,7 @@
   "name": "style-sentry-vscode",
   "displayName": "Style Sentry",
   "description": "Linter for CSS design systems to enforce team's coding standards.",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "publisher": "leehoyeon",
   "icon": "images/style-sentry_128.png",
   "engines": {
@@ -12,10 +12,23 @@
     "configuration": {
       "title": "Style Sentry",
       "properties": {
-        "style-sentry.rules.no-unused-classes": {
+        "style-sentry.rules.no-unused-classes.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Enable or disable the rule to find unused CSS classes. (Default: true)"
+          "description": "Enable unused CSS class detection rule."
+        },
+        "style-sentry.rules.no-unused-classes.ignorePatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of regex patterns for class names to ignore from unused class detection.",
+          "default": []
+        },
+        "style-sentry.rules.no-unused-classes.ignoreDynamicClasses": {
+          "type": "boolean",
+          "default": true,
+          "description": "     └─ Exclude dynamic classes (e.g., styles[className]) from unused class detection."
         },
         "style-sentry.rules.design-system-colors.allowedColors": {
           "type": "array",
@@ -38,11 +51,20 @@
                 },
                 "operator": {
                   "type": "string",
-                  "enum": [">=", "<=", ">", "<", "=="],
+                  "enum": [
+                    ">=",
+                    "<=",
+                    ">",
+                    "<",
+                    "=="
+                  ],
                   "description": "The comparison operator (e.g., '>=', '<=')."
                 }
               },
-              "required": ["threshold", "operator"],
+              "required": [
+                "threshold",
+                "operator"
+              ],
               "additionalProperties": false
             }
           },
@@ -68,7 +90,7 @@
   },
   "license": "ISC",
   "dependencies": {
-    "style-sentry": "^1.0.5"
+    "style-sentry": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "18.x",

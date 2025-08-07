@@ -1,6 +1,10 @@
-# Style Sentry for VS Code
+# Style Sentry for VSCode
 
 ![Style Sentry in action](https://github.com/ho1112/style-sentry/raw/HEAD/style-sentry-vscode/images/style-setnry_ex.webp)
+<p align="center"><em>Style Sentry in action</em></p>
+
+![Style Sentry Settings for vscode](https://github.com/ho1112/style-sentry/raw/HEAD/style-sentry-vscode/images/style-sentry_settings.webp)
+<p align="center"><em>Style Sentry Settings for vscode</em></p>
 
 ---
 
@@ -43,9 +47,17 @@ Once the extension is installed and you have a `.stylesentryrc.js` file in your 
 
 ## Configuration
 
-Style Sentry's behavior is entirely controlled by the `.stylesentryrc.js` file in your project root. Refer to the [Style Sentry CLI documentation](https://github.com/ho1112/style-sentry.git#configuration) for detailed information on how to configure rules.
+- **VSCode Extension:**
+  - Use the VSCode settings UI: Go to `File > Preferences > Settings > Extensions > Style Sentry` and configure rules such as unused class detection, dynamic class exclusion, etc.
+  - No `.stylesentryrc.js` file is required for the extension.
 
-You can also find the Style Sentry CLI package on [npm](https://www.npmjs.com/package/style-sentry).
+#### Example: VSCode Settings (settings.json)
+```json
+{
+  "style-sentry.rules.no-unused-classes.enabled": true,
+  "style-sentry.rules.no-unused-classes.ignoreDynamicClasses": true
+}
+```
 
 ## Installation
 
@@ -92,9 +104,17 @@ Style Sentry VS Code 拡張機能を使用するには、プロジェクトの�
 
 ## 設定
 
-Style Sentry の動作は、プロジェクトのルートにある `.stylesentryrc.js` ファイルによって完全に制御されます。ルールの設定方法の詳細については、[Style Sentry CLI ドキュメント](https://github.com/ho1112/style-sentry.git#configuration)を参照してください。
+- **VSCode拡張機能：**
+  - VSCodeの設定UIから直接設定できます。`ファイル > 基本設定 > 設定 > 拡張機能 > Style Sentry` で各種ルール（未使用クラス検出、動的クラス除外など）を変更できます。
+  - 拡張機能には `.stylesentryrc.js` ファイルは不要です。
 
-[npm](https://www.npmjs.com/package/style-sentry)でStyle Sentry CLIパッケージも見つけることができます。
+### 例: VSCode設定 (settings.json)
+```json
+{
+  "style-sentry.rules.no-unused-classes.enabled": true,
+  "style-sentry.rules.no-unused-classes.ignoreDynamicClasses": true
+}
+```
 
 ## インストール
 
@@ -141,9 +161,17 @@ Style Sentry VS Code 확장 프로그램을 사용하려면 프로젝트 루트�
 
 ## 설정
 
-Style Sentry의 동작은 프로젝트 루트의 `.stylesentryrc.js` 파일에 의해 전적으로 제어됩니다. 규칙 구성 방법에 대한 자세한 내용은 [Style Sentry CLI 문서](https://github.com/ho1112/style-sentry.git#configuration)를 참조하십시오.
+- **VSCode 확장 프로그램:**
+  - VSCode 설정 UI에서 직접 옵션을 변경할 수 있습니다. `파일 > 기본 설정 > 설정 > 확장 프로그램 > Style Sentry`에서 미사용 클래스 검사, 동적 클래스 제외 등 다양한 규칙을 설정하세요.
+  - 확장 프로그램에는 `.stylesentryrc.js` 파일이 필요하지 않습니다.
 
-[npm](https://www.npmjs.com/package/style-sentry)에서 Style Sentry CLI 패키지도 찾을 수 있습니다.
+### 예시: VSCode 설정 (settings.json)
+```json
+{
+  "style-sentry.rules.no-unused-classes.enabled": true,
+  "style-sentry.rules.no-unused-classes.ignoreDynamicClasses": true
+}
+```
 
 ## 설치
 

@@ -17,8 +17,12 @@ const defaultConfig = `module.exports = {
   rules: {
     // Rule: 'no-unused-classes'
     // Finds CSS classes that are defined but not used in your JSX/TSX files.
-    // Enabled by default.
-    'no-unused-classes': true,
+    'no-unused-classes': {
+      // To disable, set to false.
+      enabled: true,
+      // Ignores classes used dynamically (e.g., styles[variable]).
+      ignoreDynamicClasses: true,
+    },
 
     // Rule: 'design-system-colors'
     // Checks if the colors used are from your design system's palette.
@@ -94,7 +98,12 @@ function getCssFilesAndParsers() {
 
 // Rule 1: Find unused CSS classes
 function findUnusedClasses(config) {
-    if (!config.rules || !config.rules['no-unused-classes']) return [];
+    const ruleConfig = config.rules && config.rules['no-unused-classes'];
+    if (!ruleConfig || (typeof ruleConfig === 'object' && ruleConfig.enabled === false)) {
+        return [];
+    }
+
+    const ignoreDynamicClasses = !(typeof ruleConfig === 'object' && ruleConfig.ignoreDynamicClasses === false);
 
     const allCssFiles = glob.sync('**/*.{css,scss,less}', { ignore: 'node_modules/**' });
     const jsxFiles = glob.sync('**/*.{jsx,tsx}', { ignore: 'node_modules/**' });
@@ -104,6 +113,8 @@ function findUnusedClasses(config) {
     const globallyUsedClasses = new Set(); // For non-module classNames
 
     // 1. Parse all CSS/SCSS/Less files to find defined classes
+    // 추가: 부모-자식(중첩) 클래스 매핑
+    const parentToChildren = new Map(); // Map<parentClass, Set<childClass>>
     allCssFiles.forEach(file => {
         const fullPath = path.resolve(process.cwd(), file);
         definedClassesByFile.set(fullPath, new Map());
@@ -115,14 +126,43 @@ function findUnusedClasses(config) {
 
         try {
             const root = parser.parse(css, { from: fullPath });
+            // 중첩 셀렉터 추적용 스택
+            const parentStack = [];
             root.walkRules(rule => {
+                // 부모 셀렉터 추적
+                let parentClass = null;
+                if (rule.parent && rule.parent.type === 'rule') {
+                    // 상위 rule의 첫 번째 클래스 추출
+                    const parentSel = rule.parent.selector;
+                    const parentMatch = parentSel && parentSel.match(/\.-?[_a-zA-Z]+[_a-zA-Z0-9-]*/);
+                    if (parentMatch) {
+                        parentClass = parentMatch[0].substring(1);
+                    }
+                }
                 rule.selectors.forEach(selector => {
-                    const matches = selector.match(/\.-?[_a-zA-Z]+[_a-zA-Z0-9-]*/g) || [];
+                    // &.top → .wrapper.top 형태로 변환
+                    let sel = selector;
+                    let isNested = false;
+                    if (parentClass && selector.startsWith('&.')) {
+                        sel = `.${parentClass}.${selector.slice(2)}`;
+                        isNested = true;
+                    }
+                    const matches = sel.replace(/&/g, '').match(/\.-?[_a-zA-Z]+[_a-zA-Z0-9-]*/g) || [];
                     matches.forEach(match => {
-                        const className = match.substring(1);
-                        // Store the line number with the class name, only if it's the first time we see it.
+                        let className = match.substring(1);
+                        // 중첩이면 반드시 parent.child 형태로 저장
+                        if (isNested && parentClass) {
+                            className = `${parentClass}.${className}`;
+                        }
                         if (!definedClassesByFile.get(fullPath).has(className))
                             definedClassesByFile.get(fullPath).set(className, rule.source.start.line);
+                        // 중첩 클래스 매핑 (예: wrapper.top → wrapper: top)
+                        const parts = className.split('.');
+                        if (parts.length === 2) {
+                            const [parent, child] = parts;
+                            if (!parentToChildren.has(parent)) parentToChildren.set(parent, new Set());
+                            parentToChildren.get(parent).add(child);
+                        }
                     });
                 });
             });
@@ -132,6 +172,8 @@ function findUnusedClasses(config) {
     });
 
     // 2. Parse all JS/JSX/TSX files to find used classes
+    // 추가: 동적 접근이 감지된 부모 클래스 추적
+    const dynamicParentsByFile = new Map(); // Map<filePath, Set<parentClass>>
     jsxFiles.forEach(file => {
         try {
             const code = fs.readFileSync(file, 'utf8');
@@ -142,7 +184,7 @@ function findUnusedClasses(config) {
                 ImportDeclaration: ({ node }) => {
                     if (node.source.value.match(/\.(css|scss|less)$/)) {
                         const fullPath = path.resolve(path.dirname(file), node.source.value);
-                        if (definedClassesByFile.has(fullPath)) { // Only track imports of existing CSS files
+                        if (definedClassesByFile.has(fullPath)) {
                             const defaultSpecifier = node.specifiers.find(s => s.type === 'ImportDefaultSpecifier' || s.type === 'ImportNamespaceSpecifier');
                             if (defaultSpecifier) {
                                 moduleImports.set(defaultSpecifier.local.name, fullPath);
@@ -150,21 +192,67 @@ function findUnusedClasses(config) {
                         }
                     }
                 },
+                JSXAttribute: ({ node }) => {
+                    // className={...} 내에서 static + dynamic 조합 추적 (정밀 개선)
+                    if (node.name.name === 'className' && node.value && (node.value.type === 'JSXExpressionContainer')) {
+                        let staticParents = new Set();
+                        let foundDynamicParents = new Set();
+                        // 재귀적으로 BinaryExpression, TemplateLiteral 등 모두 탐색
+                        function walk(expr, lastStatic) {
+                            if (!expr) return;
+                            if (expr.type === 'BinaryExpression' && expr.operator === '+') {
+                                walk(expr.left, lastStatic);
+                                walk(expr.right, lastStatic);
+                            } else if (expr.type === 'TemplateLiteral') {
+                                expr.expressions.forEach(e => walk(e, lastStatic));
+                            } else if (expr.type === 'MemberExpression') {
+                                if (expr.object.type === 'Identifier' && moduleImports.has(expr.object.name)) {
+                                    if (expr.computed && expr.property.type !== 'StringLiteral') {
+                                        // 동적 접근: 직전 staticParents에 있는 모든 부모를 foundDynamicParents에 추가
+                                        staticParents.forEach(p => foundDynamicParents.add(p));
+                                    } else {
+                                        let propertyName = expr.property.type === 'Identifier' ? expr.property.name : expr.property.value;
+                                        staticParents.add(propertyName);
+                                    }
+                                }
+                            }
+                        }
+                        walk(node.value.expression, null);
+                        if (foundDynamicParents.size > 0 && ignoreDynamicClasses) {
+                            const modulePath = moduleImports.values().next().value;
+                            if (!dynamicParentsByFile.has(modulePath)) dynamicParentsByFile.set(modulePath, new Set());
+                            foundDynamicParents.forEach(parent => {
+                                if (parentToChildren.has(parent)) {
+                                    dynamicParentsByFile.get(modulePath).add(parent);
+                                }
+                            });
+                        }
+                    }
+                    // 기존 StringLiteral 처리
+                    if (node.name.name === 'className' && node.value && node.value.type === 'StringLiteral') {
+                        const classList = node.value.value.split(' ').filter(Boolean);
+                        classList.forEach(cls => globallyUsedClasses.add(cls));
+                    }
+                },
                 MemberExpression: ({ node }) => {
                     if (node.object.type === 'Identifier' && moduleImports.has(node.object.name)) {
                         const modulePath = moduleImports.get(node.object.name);
                         const usedSet = usedClassesByFile.get(modulePath);
-                        if (node.property.type === 'Identifier') {
-                            usedSet.add(node.property.name);
-                        } else if (node.property.type === 'StringLiteral') {
-                            usedSet.add(node.property.value);
+                        if (node.computed && node.property.type !== 'StringLiteral') {
+                            // 동적 접근은 JSXAttribute에서 처리
+                        } else {
+                            let propertyName = node.property.type === 'Identifier' ? node.property.name : node.property.value;
+                            usedSet.add(propertyName);
+                            const variations = new Set();
+                            variations.add(propertyName.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase());
+                            variations.add(propertyName.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase());
+                            variations.add(propertyName.replace(/-([a-z])/g, (g) => g[1].toUpperCase()));
+                            variations.add(propertyName.replace(/_([a-z])/g, (g) => g[1].toUpperCase()));
+                            variations.add(propertyName.toLowerCase());
+                            variations.add(propertyName.toUpperCase());
+                            variations.add(propertyName);
+                            variations.forEach(variant => usedSet.add(variant));
                         }
-                    }
-                },
-                JSXAttribute: ({ node }) => {
-                    if (node.name.name === 'className' && node.value.type === 'StringLiteral') {
-                        const classList = node.value.value.split(' ').filter(Boolean);
-                        classList.forEach(cls => globallyUsedClasses.add(cls));
                     }
                 }
             });
@@ -177,7 +265,19 @@ function findUnusedClasses(config) {
     const unusedClassDetails = [];
     definedClassesByFile.forEach((definedClasses, filePath) => {
         const usedClasses = usedClassesByFile.get(filePath);
+        const dynamicParents = dynamicParentsByFile.get(filePath) || new Set();
         definedClasses.forEach((line, cls) => {
+            const parts = cls.split('.');
+            if (parts.length === 2) {
+                const [parent, child] = parts;
+                // 동적 접근이 감지된 부모의 자식이면 사용된 것으로 간주
+                if (dynamicParents.has(parent)) return;
+                // 정적: 부모와 자식이 모두 사용된 경우만 자식도 사용된 것으로 간주
+                if (usedClasses.has(parent) && usedClasses.has(child)) return;
+            } else if (parts.length === 1) {
+                // 부모 클래스는 단독 사용만 체크
+                if (usedClasses.has(cls) || globallyUsedClasses.has(cls)) return;
+            }
             if (!usedClasses.has(cls) && !globallyUsedClasses.has(cls)) {
                 unusedClassDetails.push({
                     file: path.relative(process.cwd(), filePath),
@@ -187,7 +287,6 @@ function findUnusedClasses(config) {
             }
         });
     });
-
     return unusedClassDetails;
 }
 
