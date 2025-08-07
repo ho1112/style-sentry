@@ -2,7 +2,7 @@
   "name": "style-sentry-vscode",
   "displayName": "Style Sentry",
   "description": "Linter for CSS design systems to enforce team's coding standards.",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "publisher": "leehoyeon",
   "icon": "images/style-sentry_128.png",
   "engines": {

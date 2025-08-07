@@ -84,7 +84,7 @@ function lintDocument(document: vscode.TextDocument) {
         fs.writeFileSync(tempConfigPath, tempConfigContent);
 
         const command = `node "${cliPath}" --json --config "${tempConfigPath}"`;
-        exec(command, { cwd: workspaceFolder.uri.fsPath }, (err, stdout, stderr) => {
+        exec(command, { cwd: workspaceFolder.uri.fsPath, maxBuffer: 1024 * 1024 * 10 }, (err, stdout, stderr) => {
             try {
                 if (err && !stdout) {
                     vscode.window.showErrorMessage(`Style Sentry error: ${stderr}`);

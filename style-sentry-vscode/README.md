@@ -1,6 +1,6 @@
 # Style Sentry for VS Code
 
-![Style Sentry in action](images/style-setnry_ex.webp)
+![Style Sentry in action](https://github.com/ho1112/style-sentry/raw/HEAD/style-sentry-vscode/images/style-setnry_ex.webp)
 
 ---
 
