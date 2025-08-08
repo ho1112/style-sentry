@@ -1,0 +1,139 @@
+@charset "utf-8";
+
+// Button mixin
+@mixin button($width, $height) {
+  width: $width;
+  height: $height;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  font-weight: bold;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease-in;
+
+  &:hover {
+    cursor: pointer;
+    background-color: #007bff;
+  }
+
+  &:focus {
+    filter: none;
+  }
+
+  &:active {
+    filter: none;
+
+    &::after {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: $width;
+      height: $width;
+      margin-top: -$width / 2;
+      margin-left: -$width / 2;
+      content: '';
+      border-radius: 100%;
+      opacity: 0;
+      animation: ripple 0.5s ease-out;
+    }
+  }
+
+  &:disabled {
+    pointer-events: none;
+  }
+
+  &.oval {
+    border-radius: $height / 2;
+  }
+
+  &.round {
+    border-radius: 4px;
+  }
+
+  &::after {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+
+  &.isLoading {
+    pointer-events: none;
+    background-color: #e3f2fd;
+
+    &::before {
+      position: absolute;
+      content: '';
+      display: block;
+      background-color: #e3f2fd;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      left: 0;
+      top: 0;
+      animation: fadein 0.3s forwards ease-in-out;
+    }
+
+    &::after {
+      background-color: transparent;
+      position: absolute;
+      content: '';
+      width: 16px;
+      height: 16px;
+      opacity: 0;
+      border-radius: 50%;
+      border-top: 2px solid #007bff;
+      border-right: 2px solid #e3f2fd;
+      border-bottom: 2px solid #007bff;
+      border-left: 2px solid #007bff;
+      left: calc((100% - 16px) / 2);
+      top: calc((100% - 16px) / 2);
+      animation: fadein 0.5s 0.3s forwards ease-in-out,
+        load 1.1s infinite linear;
+    }
+  }
+
+  &.link {
+    line-height: $height - 4px;
+
+    &::after {
+      background: rgba(0, 123, 255, 0.2);
+    }
+  }
+}
+
+// Primary button
+.primary {
+  @include button(120px, 40px);
+  background-color: #007bff;
+  color: white;
+  border: none;
+}
+
+// Secondary button
+.secondary {
+  @include button(120px, 40px);
+  background-color: transparent;
+  color: #007bff;
+  border: 2px solid #007bff;
+}
+
+// Circle button
+.circle {
+  @include button(40px, 40px);
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+}
+
+// Standalone classes that should be accessible via styles.oval, styles.round
+// (현업 프로젝트와 동일하게 믹스인 내부에만 정의)
+
+// Other classes
+.icon {
+  gap: 8px;
+}
+
+.alert {
+  background-color: #dc3545;
+}

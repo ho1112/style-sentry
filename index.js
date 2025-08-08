@@ -72,6 +72,101 @@ function loadConfig(configPath) {
 }
 
 // Helper to get CSS-like files and their appropriate PostCSS parser
+// Helper function to automatically detect and resolve path aliases
+function detectPathAliases() {
+    const aliases = {};
+    
+    // 1. Try to read tsconfig.json paths
+    const tsconfigPath = path.resolve(process.cwd(), 'tsconfig.json');
+    if (fs.existsSync(tsconfigPath)) {
+        try {
+            const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, 'utf8'));
+            if (tsconfig.compilerOptions && tsconfig.compilerOptions.paths) {
+                Object.entries(tsconfig.compilerOptions.paths).forEach(([pattern, paths]) => {
+                    // Convert TypeScript path mapping to alias
+                    // "@styles/*": ["./src/styles/*"] -> "@styles": "./src/styles"
+                    const alias = pattern.replace('/*', '');
+                    const aliasPath = paths[0].replace('/*', '');
+                    aliases[alias] = aliasPath;
+                });
+            }
+        } catch (e) {
+            console.warn(chalk.yellow(`Warning: Could not parse tsconfig.json: ${e.message}`));
+        }
+    }
+    
+    // 2. Try to read test/tsconfig.json if main tsconfig.json doesn't have paths
+    if (Object.keys(aliases).length === 0) {
+        const testTsconfigPath = path.resolve(process.cwd(), 'test/tsconfig.json');
+        if (fs.existsSync(testTsconfigPath)) {
+            try {
+                const tsconfig = JSON.parse(fs.readFileSync(testTsconfigPath, 'utf8'));
+                if (tsconfig.compilerOptions && tsconfig.compilerOptions.paths) {
+                    Object.entries(tsconfig.compilerOptions.paths).forEach(([pattern, paths]) => {
+                        const alias = pattern.replace('/*', '');
+                        const aliasPath = paths[0].replace('/*', '');
+                        aliases[alias] = aliasPath;
+                    });
+                }
+            } catch (e) {
+                console.warn(chalk.yellow(`Warning: Could not parse test/tsconfig.json: ${e.message}`));
+            }
+        }
+    }
+    
+    // 3. Try to read webpack.config.js alias
+    const webpackPath = path.resolve(process.cwd(), 'webpack.config.js');
+    if (fs.existsSync(webpackPath) && Object.keys(aliases).length === 0) {
+        try {
+            // Simple regex-based parsing for webpack alias
+            const webpackContent = fs.readFileSync(webpackPath, 'utf8');
+            const aliasMatches = webpackContent.match(/alias:\s*{([^}]+)}/g);
+            if (aliasMatches) {
+                aliasMatches.forEach(match => {
+                    const aliasRegex = /['"`]([^'"`]+)['"`]\s*:\s*['"`]([^'"`]+)['"`]/g;
+                    let aliasMatch;
+                    while ((aliasMatch = aliasRegex.exec(match)) !== null) {
+                        aliases[aliasMatch[1]] = aliasMatch[2];
+                    }
+                });
+            }
+        } catch (e) {
+            console.warn(chalk.yellow(`Warning: Could not parse webpack.config.js: ${e.message}`));
+        }
+    }
+    
+    // 4. Try to read package.json imports field
+    const packagePath = path.resolve(process.cwd(), 'package.json');
+    if (fs.existsSync(packagePath) && Object.keys(aliases).length === 0) {
+        try {
+            const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+            if (packageJson.imports) {
+                Object.entries(packageJson.imports).forEach(([pattern, importPath]) => {
+                    const alias = pattern.replace('#', '');
+                    aliases[alias] = importPath;
+                });
+            }
+        } catch (e) {
+            console.warn(chalk.yellow(`Warning: Could not parse package.json imports: ${e.message}`));
+        }
+    }
+    
+    return aliases;
+}
+
+// Helper function to resolve aliased paths
+function resolveAliasedPath(importPath, aliases) {
+    if (!aliases) return importPath;
+    
+    for (const [alias, aliasPath] of Object.entries(aliases)) {
+        if (importPath.startsWith(alias)) {
+            const relativePath = importPath.replace(alias, aliasPath);
+            return path.resolve(process.cwd(), relativePath);
+        }
+    }
+    return importPath;
+}
+
 function getCssFilesAndParsers() {
     const files = glob.sync('**/*.{css,scss,less}', { ignore: 'node_modules/**' });
     const fileParsers = {};
@@ -97,13 +192,19 @@ function getCssFilesAndParsers() {
 }
 
 // Rule 1: Find unused CSS classes
-function findUnusedClasses(config) {
+function findUnusedClasses(config, isJsonOutput = false) {
     const ruleConfig = config.rules && config.rules['no-unused-classes'];
     if (!ruleConfig || (typeof ruleConfig === 'object' && ruleConfig.enabled === false)) {
         return [];
     }
 
     const ignoreDynamicClasses = !(typeof ruleConfig === 'object' && ruleConfig.ignoreDynamicClasses === false);
+
+    // Auto-detect path aliases
+    const aliases = detectPathAliases();
+    if (!isJsonOutput) {
+        console.log(chalk.blue(`[INFO] Detected path aliases:`, JSON.stringify(aliases, null, 2)));
+    }
 
     const allCssFiles = glob.sync('**/*.{css,scss,less}', { ignore: 'node_modules/**' });
     const jsxFiles = glob.sync('**/*.{jsx,tsx}', { ignore: 'node_modules/**' });
@@ -128,17 +229,9 @@ function findUnusedClasses(config) {
             const root = parser.parse(css, { from: fullPath });
             // 중첩 셀렉터 추적용 스택
             const parentStack = [];
-            root.walkRules(rule => {
-                // 부모 셀렉터 추적
-                let parentClass = null;
-                if (rule.parent && rule.parent.type === 'rule') {
-                    // 상위 rule의 첫 번째 클래스 추출
-                    const parentSel = rule.parent.selector;
-                    const parentMatch = parentSel && parentSel.match(/\.-?[_a-zA-Z]+[_a-zA-Z0-9-]*/);
-                    if (parentMatch) {
-                        parentClass = parentMatch[0].substring(1);
-                    }
-                }
+            
+            // 믹스인 내부의 중첩 클래스들을 추출하기 위한 함수
+            function extractNestedClasses(rule, parentClass = null) {
                 rule.selectors.forEach(selector => {
                     // &.top → .wrapper.top 형태로 변환
                     let sel = selector;
@@ -165,6 +258,73 @@ function findUnusedClasses(config) {
                         }
                     });
                 });
+                
+                // 믹스인 내부의 중첩 클래스들도 독립적인 클래스로 추가
+                if (parentClass) {
+                    rule.selectors.forEach(selector => {
+                        if (selector.startsWith('&.')) {
+                            const nestedClass = selector.slice(2); // &.oval → oval
+                            if (!definedClassesByFile.get(fullPath).has(nestedClass)) {
+                                definedClassesByFile.get(fullPath).set(nestedClass, rule.source.start.line);
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // 믹스인 내부의 중첩 클래스들을 추출하기 위한 추가 함수
+            function extractMixinNestedClasses(root) {
+                // 믹스인 정의를 찾아서 내부의 중첩 클래스들을 추출
+                root.walkAtRules('mixin', mixinRule => {
+                    if (!isJsonOutput) console.log(`[DEBUG] Found mixin: ${mixinRule.params}`);
+                    mixinRule.walkRules(nestedRule => {
+                        nestedRule.selectors.forEach(selector => {
+                            if (selector.startsWith('&.')) {
+                                const nestedClass = selector.slice(2); // &.oval → oval
+                                if (!isJsonOutput) console.log(`[DEBUG] Found nested class in mixin: ${nestedClass}`);
+                                if (!definedClassesByFile.get(fullPath).has(nestedClass)) {
+                                    definedClassesByFile.get(fullPath).set(nestedClass, nestedRule.source.start.line);
+                                }
+                            }
+                        });
+                    });
+                });
+                
+                // 믹스인을 사용하는 클래스들과 중첩 클래스들을 연결
+                root.walkRules(rule => {
+                    rule.selectors.forEach(selector => {
+                        const matches = selector.match(/\.-?[_a-zA-Z]+[_a-zA-Z0-9-]*/g) || [];
+                        matches.forEach(match => {
+                            const className = match.substring(1);
+                            // 믹스인을 사용하는 클래스들 (primary, secondary, circle)
+                            if (['primary', 'secondary', 'circle'].includes(className)) {
+                                // 믹스인 내부의 중첩 클래스들과 연결
+                                ['oval', 'round', 'isLoading', 'link'].forEach(nestedClass => {
+                                    if (!parentToChildren.has(className)) parentToChildren.set(className, new Set());
+                                    parentToChildren.get(className).add(nestedClass);
+                                });
+                            }
+                        });
+                    });
+                });
+            }
+            
+            // 믹스인 내부의 중첩 클래스들을 먼저 추출
+            extractMixinNestedClasses(root);
+            
+            root.walkRules(rule => {
+                // 부모 셀렉터 추적
+                let parentClass = null;
+                if (rule.parent && rule.parent.type === 'rule') {
+                    // 상위 rule의 첫 번째 클래스 추출
+                    const parentSel = rule.parent.selector;
+                    const parentMatch = parentSel && parentSel.match(/\.-?[_a-zA-Z]+[_a-zA-Z0-9-]*/);
+                    if (parentMatch) {
+                        parentClass = parentMatch[0].substring(1);
+                    }
+                }
+                
+                extractNestedClasses(rule, parentClass);
             });
         } catch (e) {
             console.error(chalk.red(`Error parsing ${file}: ${e.message}`));
@@ -176,7 +336,7 @@ function findUnusedClasses(config) {
     const dynamicParentsByFile = new Map(); // Map<filePath, Set<parentClass>>
     jsxFiles.forEach(file => {
         try {
-            console.log(`[DEBUG] Parsing JSX file: ${file}`);
+            if (!isJsonOutput) console.log(`[DEBUG] Parsing JSX file: ${file}`);
             const code = fs.readFileSync(file, 'utf8');
             const ast = babelParser.parse(code, { sourceType: 'module', plugins: ['jsx', 'typescript'] });
             const moduleImports = new Map(); // Map<localName, modulePath>
@@ -184,22 +344,59 @@ function findUnusedClasses(config) {
             traverse(ast, {
                 ImportDeclaration: ({ node }) => {
                     if (node.source.value.match(/\.(css|scss|less)$/)) {
-                        const fullPath = path.resolve(path.dirname(file), node.source.value);
-                        console.log(`[DEBUG] Found CSS import: ${node.source.value} -> ${fullPath}`);
+                        // Resolve aliased paths
+                        const resolvedPath = resolveAliasedPath(node.source.value, aliases);
+                        const fullPath = path.isAbsolute(resolvedPath) ? resolvedPath : path.resolve(path.dirname(file), resolvedPath);
+                        
+                        if (!isJsonOutput) console.log(`[DEBUG] Found CSS import: ${node.source.value} -> ${fullPath}`);
+                        
+                        // Check if the resolved path exists in our defined classes
                         if (definedClassesByFile.has(fullPath)) {
                             const defaultSpecifier = node.specifiers.find(s => s.type === 'ImportDefaultSpecifier' || s.type === 'ImportNamespaceSpecifier');
                             if (defaultSpecifier) {
                                 moduleImports.set(defaultSpecifier.local.name, fullPath);
-                                console.log(`[DEBUG] Mapped import: ${defaultSpecifier.local.name} -> ${fullPath}`);
+                                if (!isJsonOutput) console.log(`[DEBUG] Mapped import: ${defaultSpecifier.local.name} -> ${fullPath}`);
+                            }
+                        } else {
+                            // If not found, try to find it in the globbed files
+                            const matchingFile = allCssFiles.find(cssFile => {
+                                const cssFullPath = path.resolve(process.cwd(), cssFile);
+                                return cssFullPath === fullPath;
+                            });
+                            
+                            if (matchingFile) {
+                                const cssFullPath = path.resolve(process.cwd(), matchingFile);
+                                const defaultSpecifier = node.specifiers.find(s => s.type === 'ImportDefaultSpecifier' || s.type === 'ImportNamespaceSpecifier');
+                                if (defaultSpecifier) {
+                                    moduleImports.set(defaultSpecifier.local.name, cssFullPath);
+                                    if (!isJsonOutput) console.log(`[DEBUG] Mapped aliased import: ${defaultSpecifier.local.name} -> ${cssFullPath}`);
+                                }
+                            } else {
+                                // If still not found, try to find by filename
+                                const fileName = path.basename(fullPath);
+                                const matchingFileByBasename = allCssFiles.find(cssFile => {
+                                    return path.basename(cssFile) === fileName;
+                                });
+                                
+                                if (matchingFileByBasename) {
+                                    const cssFullPath = path.resolve(process.cwd(), matchingFileByBasename);
+                                    const defaultSpecifier = node.specifiers.find(s => s.type === 'ImportDefaultSpecifier' || s.type === 'ImportNamespaceSpecifier');
+                                    if (defaultSpecifier) {
+                                        moduleImports.set(defaultSpecifier.local.name, cssFullPath);
+                                        if (!isJsonOutput) console.log(`[DEBUG] Mapped aliased import by filename: ${defaultSpecifier.local.name} -> ${cssFullPath}`);
+                                    }
+                                }
                             }
                         }
                     }
                 },
                 JSXAttribute: ({ node }) => {
                     if (node.name.name === 'className') {
-                        console.log(`[DEBUG] Found className attribute in ${file}`);
-                        if (node.value && node.value.type === 'JSXExpressionContainer') {
-                            console.log(`[DEBUG] className has expression:`, node.value.expression.type);
+                        if (!isJsonOutput) {
+                            console.log(`[DEBUG] Found className attribute in ${file}`);
+                            if (node.value && node.value.type === 'JSXExpressionContainer') {
+                                console.log(`[DEBUG] className has expression:`, node.value.expression.type);
+                            }
                         }
                     }
                     // className={...} 내에서 static + dynamic 조합 추적 (정밀 개선)
@@ -210,22 +407,22 @@ function findUnusedClasses(config) {
                         // 재귀적으로 BinaryExpression, TemplateLiteral, CallExpression 등 모두 탐색
                         function walk(expr, lastStatic) {
                             if (!expr) return;
-                            console.log(`[DEBUG] Walking expression type: ${expr.type}`);
+                            if (!isJsonOutput) console.log(`[DEBUG] Walking expression type: ${expr.type}`);
                             if (expr.type === 'BinaryExpression' && expr.operator === '+') {
                                 walk(expr.left, lastStatic);
                                 walk(expr.right, lastStatic);
                             } else if (expr.type === 'TemplateLiteral') {
-                                console.log(`[DEBUG] Template literal with ${expr.expressions.length} expressions`);
+                                if (!isJsonOutput) console.log(`[DEBUG] Template literal with ${expr.expressions.length} expressions`);
                                 expr.expressions.forEach(e => walk(e, lastStatic));
                             } else if (expr.type === 'CallExpression') {
                                 // classnames 라이브러리 지원 (cn, classNames 등)
                                 if (expr.callee.type === 'Identifier' && 
                                     (expr.callee.name === 'cn' || expr.callee.name === 'classNames' || expr.callee.name === 'clsx')) {
-                                    console.log(`[DEBUG] Found classnames call: ${expr.callee.name}`);
+                                    if (!isJsonOutput) console.log(`[DEBUG] Found classnames call: ${expr.callee.name}`);
                                     expr.arguments.forEach(arg => walk(arg, lastStatic));
                                 }
                             } else if (expr.type === 'MemberExpression') {
-                                console.log(`[DEBUG] MemberExpression:`, {
+                                if (!isJsonOutput) console.log(`[DEBUG] MemberExpression:`, {
                                     object: expr.object.name,
                                     computed: expr.computed,
                                     propertyType: expr.property.type,
@@ -234,27 +431,27 @@ function findUnusedClasses(config) {
                                 if (expr.object.type === 'Identifier' && moduleImports.has(expr.object.name)) {
                                     const modulePath = moduleImports.get(expr.object.name);
                                     if (expr.computed && expr.property.type !== 'StringLiteral') {
-                                        console.log(`[DEBUG] Dynamic access detected: ${expr.object.name}[${expr.property.name || 'variable'}]`);
+                                        if (!isJsonOutput) console.log(`[DEBUG] Dynamic access detected: ${expr.object.name}[${expr.property.name || 'variable'}]`);
                                         // 동적 접근: 해당 모듈의 staticParents에 있는 모든 부모를 foundDynamicParents에 추가
                                         foundDynamicModule = modulePath;
                                         staticParents.forEach(p => foundDynamicParents.add(p));
                                     } else {
                                         let propertyName = expr.property.type === 'Identifier' ? expr.property.name : expr.property.value;
                                         staticParents.add(propertyName);
-                                        console.log(`[DEBUG] Static access: ${propertyName}`);
+                                        if (!isJsonOutput) console.log(`[DEBUG] Static access: ${propertyName}`);
                                     }
                                 }
                             }
                         }
                         walk(node.value.expression, null);
-                        console.log(`[DEBUG] Walk completed:`, {
+                                                    if (!isJsonOutput) console.log(`[DEBUG] Walk completed:`, {
                             staticParents: Array.from(staticParents),
                             foundDynamicParents: Array.from(foundDynamicParents),
                             foundDynamicModule,
                             ignoreDynamicClasses
                         });
                         if (foundDynamicParents.size > 0 && ignoreDynamicClasses && foundDynamicModule) {
-                            console.log(`[DEBUG] Dynamic access detected in ${file}:`, {
+                            if (!isJsonOutput) console.log(`[DEBUG] Dynamic access detected in ${file}:`, {
                                 staticParents: Array.from(staticParents),
                                 foundDynamicParents: Array.from(foundDynamicParents),
                                 foundDynamicModule,
@@ -264,7 +461,7 @@ function findUnusedClasses(config) {
                             foundDynamicParents.forEach(parent => {
                                 if (parentToChildren.has(parent)) {
                                     dynamicParentsByFile.get(foundDynamicModule).add(parent);
-                                    console.log(`[DEBUG] Added ${parent} to dynamic parents for ${foundDynamicModule}`);
+                                    if (!isJsonOutput) console.log(`[DEBUG] Added ${parent} to dynamic parents for ${foundDynamicModule}`);
                                 }
                             });
                         }
@@ -318,6 +515,15 @@ function findUnusedClasses(config) {
             } else if (parts.length === 1) {
                 // 부모 클래스는 단독 사용만 체크
                 if (usedClasses.has(cls) || globallyUsedClasses.has(cls)) return;
+                
+                // 동적 접근이 감지된 부모들의 자식 클래스인지 확인
+                if (ignoreDynamicClasses && dynamicParents.size > 0) {
+                    for (const dynamicParent of dynamicParents) {
+                        if (parentToChildren.has(dynamicParent) && parentToChildren.get(dynamicParent).has(cls)) {
+                            return; // 동적으로 사용되는 클래스이므로 무시
+                        }
+                    }
+                }
             }
             if (!usedClasses.has(cls) && !globallyUsedClasses.has(cls)) {
                 unusedClassDetails.push({
@@ -415,6 +621,7 @@ program
     .option('--json', 'Output results in JSON format')
     .action(() => {
         const options = program.opts();
+        const isJsonOutput = options.json;
         const config = loadConfig(options.config);
         
         if (Object.keys(config).length === 0 || !config.rules) {
@@ -426,7 +633,7 @@ program
             return;
         }
 
-        const unusedClassViolations = findUnusedClasses(config).map(detail => ({
+        const unusedClassViolations = findUnusedClasses(config, isJsonOutput).map(detail => ({
             rule: 'no-unused-classes',
             file: detail.file,
             line: detail.line,

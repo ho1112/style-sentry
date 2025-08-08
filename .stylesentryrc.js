@@ -6,7 +6,7 @@ module.exports = {
       // To disable, set to false.
       enabled: true,
       // Ignores classes used dynamically (e.g., styles[variable]).
-      ignoreDynamicClasses: false,
+      ignoreDynamicClasses: true,
     },
 
     // Rule: 'design-system-colors'

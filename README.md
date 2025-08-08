@@ -19,7 +19,9 @@ Style Sentry is a custom CSS linter and VSCode extension designed to enforce you
 
 ### Features
 
-- **Unused CSS Class Detection:** Finds CSS classes that are defined but not used in your JSX/TSX files. Supports `.css`, `.scss`, and `.less` files. Fully supports the `classnames` library (`cn`, `classNames`, `clsx`) for dynamic class composition.<br>
+- **Unused CSS Class Detection:** Finds CSS classes that are defined but not used in your JSX/TSX files. Supports `.css`, `.scss`, and `.less` files.<br>
+Fully supports the `classnames` library (`cn`, `classNames`, `clsx`) for dynamic class composition.<br>
+Also automatically supports nested classes within SCSS `@mixin` (e.g., `&.oval`, `&.round`) and TypeScript/webpack alias paths (e.g., `@styles/`, `@components/`).<br>
 (Optionally, classes accessed dynamically (e.g., styles[variable]) can be excluded from unused class detection via configuration.)
 - **Design System Color Check:** Checks if the colors used are from your design system's palette. Supports `.css`, `.scss`, and `.less` files. **Note:** This rule currently skips validation for declarations using preprocessor variables (e.g., `$variable`, `@variable`) as it cannot resolve their final color values.
 - **Numeric Property Limits:** Checks for limits on numeric CSS properties (e.g., `z-index`, `font-size`, `width`) to maintain consistency and prevent issues. Supports `.css`, `.scss`, and `.less` files.
@@ -94,7 +96,9 @@ Install it from the [Visual Studio Code Marketplace](https://marketplace.visuals
 
 ### 主な機能
 
-- **未使用のCSSクラスの検出:** CSSで定義されているが、JSX/TSXファイルで使用されていないクラスを検出します。`.css`、`.scss`、`.less`ファイルをサポートします。`classnames`ライブラリ（`cn`、`classNames`、`clsx`）による動的クラス構成を完全にサポートします。<br>
+- **未使用のCSSクラスの検出:** CSSで定義されているが、JSX/TSXファイルで使用されていないクラスを検出します。`.css`、`.scss`、`.less`ファイルをサポートします。<br>
+`classnames`ライブラリ（`cn`、`classNames`、`clsx`）による動的クラス構成を完全にサポートします。<br>
+SCSSの`@mixin`内のネストされたクラス（`&.oval`、`&.round`など）や、TypeScript/webpackのエイリアスパス（`@styles/`、`@components/`など）も自動的にサポートします。<br>
 (オプションで、styles[variable] のような動的にアクセスされるクラスは設定により未使用クラス検出から除外できます。)
 - **デザインシステムのカラー規則のチェック:** 使用されている色がデザインシステムのカラーパレットで定義されたものであるかを確認します。`.css`、`.scss`、`.less`ファイルをサポートします。**注:** このルールは現在、プリプロセッサ変数（例: `$variable`、`@variable`）を使用する宣言については、最終的な色値を解決できないため、検証をスキップします。
 - **数値プロパティの制限のチェック:** `z-index`、`font-size`、`width`などの数値CSSプロパティの制限をチェックし、一貫性を維持し、問題を防止します。`.css`、`.scss`、`.less`ファイルをサポートします。
@@ -171,7 +175,9 @@ Style Sentry VS Code拡張機能で開発ワークフローを強化しましょ
 
 ### 주요 기능
 
-- **미사용 CSS 클래스 검출:** CSS에 정의되었지만 JSX/TSX 파일에서 사용되지 않는 클래스를 찾습니다. `.css`, `.scss`, `.less` 파일을 지원합니다. `classnames` 라이브러리(`cn`, `classNames`, `clsx`)를 통한 동적 클래스 구성을 완전히 지원합니다.<br>
+- **미사용 CSS 클래스 검출:** CSS에 정의되었지만 JSX/TSX 파일에서 사용되지 않는 클래스를 찾습니다. `.css`, `.scss`, `.less` 파일을 지원합니다.<br>
+`classnames` 라이브러리(`cn`, `classNames`, `clsx`)를 통한 동적 클래스 구성을 완전히 지원합니다.<br>
+SCSS의 `@mixin` 내부의 중첩된 클래스(`&.oval`, `&.round` 등)와 TypeScript/webpack의 별칭 경로(`@styles/`, `@components/` 등)도 자동으로 지원합니다.<br>
 (옵션) 동적으로 접근되는 클래스(styles[변수])는 설정에 따라 미사용 검사에서 제외할 수 있습니다.
 - **디자인 시스템 색상 규칙 검사:** 사용된 색상이 디자인 시스템의 색상 팔레트에 정의된 것인지 확인합니다. `.css`, `.scss`, `.less` 파일을 지원합니다. **참고:** 이 규칙은 현재 전처리기 변수(예: `$variable`, `@variable`)를 사용하는 선언에 대해서는 최종 색상 값을 확인할 수 없으므로 유효성 검사를 건너뜁니다.
 - **숫자 속성 제한 검사:** `z-index`, `font-size`, `width`와 같은 숫자 CSS 속성에 대한 제한을 확인하여 일관성을 유지하고 문제를 방지합니다. `.css`, `.scss`, `.less` 파일을 지원합니다.

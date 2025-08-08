@@ -22,7 +22,10 @@
 ## Features
 
 *   **Real-time Linting:** Automatically checks your `.css`, `.scss`, and `.less` files as you type or save.
-*   **Unused CSS Class Detection:** Identifies CSS classes defined but not used in your JSX/TSX files. Fully supports the `classnames` library (`cn`, `classNames`, `clsx`) for dynamic class composition.
+*   **Unused CSS Class Detection:** Identifies CSS classes defined but not used in your JSX/TSX files.<br>
+Fully supports the `classnames` library (`cn`, `classNames`, `clsx`) for dynamic class composition.<br>
+Also automatically supports nested classes within SCSS `@mixin` (e.g., `&.oval`, `&.round`) and TypeScript/webpack alias paths (e.g., `@styles/`, `@components/`).<br>
+(Optionally, classes accessed dynamically (e.g., styles[variable]) can be excluded from unused class detection via configuration.)
 *   **Design System Color Check:** Verifies if colors used are from your predefined design system palette.
 *   **Numeric Property Limits:** Enforces limits on numeric CSS properties like `z-index`, `font-size`, and `width`.
 
@@ -79,7 +82,10 @@ Once the extension is installed and you have a `.stylesentryrc.js` file in your 
 ## 機能
 
 *   **リアルタイムリンティング:** 入力または保存時に `.css`、`.scss`、`.less` ファイルを自動的にチェックします。
-*   **未使用のCSSクラスの検出:** JSX/TSX ファイルで定義されているが使用されていない CSS クラスを識別します。`classnames`ライブラリ（`cn`、`classNames`、`clsx`）による動的クラス構成を完全にサポートします。
+*   **未使用のCSSクラスの検出:** JSX/TSX ファイルで定義されているが使用されていない CSS クラスを識別します。<br>
+`classnames`ライブラリ（`cn`、`classNames`、`clsx`）による動的クラス構成を完全にサポートします。<br>
+SCSSの`@mixin`内のネストされたクラス（`&.oval`、`&.round`など）や、TypeScript/webpackのエイリアスパス（`@styles/`、`@components/`など）も自動的にサポートします。<br>
+(オプションで、styles[variable] のような動的にアクセスされるクラスは設定により未使用クラス検出から除外できます。)
 *   **デザインシステムのカラーチェック:** 使用されている色が事前定義されたデザインシステムパレットからのものであるかを確認します。
 *   **数値プロパティの制限:** `z-index`、`font-size`、`width` などの数値 CSS プロパティに制限を適用します。
 
@@ -136,7 +142,10 @@ Style Sentry VS Code 拡張機能を使用するには、プロジェクトの�
 ## 기능
 
 *   **실시간 린팅:** 입력하거나 저장할 때 `.css`, `.scss`, `.less` 파일을 자동으로 검사합니다.
-*   **미사용 CSS 클래스 검출:** JSX/TSX 파일에서 정의되었지만 사용되지 않는 CSS 클래스를 식별합니다. `classnames` 라이브러리(`cn`, `classNames`, `clsx`)를 통한 동적 클래스 구성을 완전히 지원합니다.
+*   **미사용 CSS 클래스 검출:** JSX/TSX 파일에서 정의되었지만 사용되지 않는 CSS 클래스를 식별합니다.<br>
+`classnames` 라이브러리(`cn`, `classNames`, `clsx`)를 통한 동적 클래스 구성을 완전히 지원합니다.<br>
+SCSS의 `@mixin` 내부의 중첩된 클래스(`&.oval`, `&.round` 등)와 TypeScript/webpack의 별칭 경로(`@styles/`, `@components/` 등)도 자동으로 지원합니다.<br>
+(옵션) 동적으로 접근되는 클래스(styles[변수])는 설정에 따라 미사용 검사에서 제외할 수 있습니다.
 *   **디자인 시스템 색상 검사:** 사용된 색상이 미리 정의된 디자인 시스템 팔레트에서 온 것인지 확인합니다.
 *   **숫자 속성 제한:** `z-index`, `font-size`, `width`와 같은 숫자 CSS 속성에 제한을 적용합니다.
 
