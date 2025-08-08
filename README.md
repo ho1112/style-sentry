@@ -68,6 +68,13 @@ module.exports = {
 };
 ```
 
+### Limitations & Notes
+
+- **Component-based usage:** Classes used within component implementations (e.g., `&.icon i` used by an `<Icon>` component) may be flagged as unused even if they are actually used in the browser. This is a known limitation of static analysis.
+- **Dynamic rendering:** Classes used in conditional rendering or dynamic components may not be detected.
+- **CSS-in-JS:** Classes defined in styled-components or CSS-in-JS libraries are not currently supported.
+- **False positives:** The linter may occasionally flag classes as unused when they are actually used. Please review flagged classes manually before removal.
+
 ### Usage
 
 #### CLI
@@ -144,6 +151,13 @@ module.exports = {
   },
 };
 ```
+
+### 制限事項・注意点
+
+- **コンポーネントベースの使用:** コンポーネント実装内で使用されるクラス（例：`<Icon>`コンポーネントで使用される`&.icon i`）は、実際にブラウザで使用されていても未使用としてフラグが立てられる場合があります。これは静的解析の既知の制限です。
+- **動的レンダリング:** 条件付きレンダリングや動的コンポーネントで使用されるクラスは検出されない場合があります。
+- **CSS-in-JS:** styled-componentsやCSS-in-JSライブラリで定義されたクラスは現在サポートされていません。
+- **誤検知:** リンターは実際に使用されているクラスを未使用としてフラグを立てる場合があります。削除前にフラグが立てられたクラスを手動で確認してください。
 
 ### 使用方法
 
@@ -223,6 +237,13 @@ module.exports = {
   },
 };
 ```
+
+### 제한사항 및 주의점
+
+- **컴포넌트 기반 사용:** 컴포넌트 구현 내부에서 사용되는 클래스(예: `<Icon>` 컴포넌트에서 사용되는 `&.icon i`)는 실제로 브라우저에서 사용되고 있어도 미사용으로 표시될 수 있습니다. 이는 정적 분석의 알려진 제한사항입니다.
+- **동적 렌더링:** 조건부 렌더링이나 동적 컴포넌트에서 사용되는 클래스는 감지되지 않을 수 있습니다.
+- **CSS-in-JS:** styled-components나 CSS-in-JS 라이브러리에서 정의된 클래스는 현재 지원되지 않습니다.
+- **오탐:** 린터가 실제로 사용되는 클래스를 미사용으로 표시할 수 있습니다. 제거하기 전에 표시된 클래스를 수동으로 확인해주세요.
 
 ### 사용법
 
