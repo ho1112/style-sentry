@@ -176,6 +176,7 @@ function findUnusedClasses(config) {
     const dynamicParentsByFile = new Map(); // Map<filePath, Set<parentClass>>
     jsxFiles.forEach(file => {
         try {
+            console.log(`[DEBUG] Parsing JSX file: ${file}`);
             const code = fs.readFileSync(file, 'utf8');
             const ast = babelParser.parse(code, { sourceType: 'module', plugins: ['jsx', 'typescript'] });
             const moduleImports = new Map(); // Map<localName, modulePath>
@@ -184,46 +185,86 @@ function findUnusedClasses(config) {
                 ImportDeclaration: ({ node }) => {
                     if (node.source.value.match(/\.(css|scss|less)$/)) {
                         const fullPath = path.resolve(path.dirname(file), node.source.value);
+                        console.log(`[DEBUG] Found CSS import: ${node.source.value} -> ${fullPath}`);
                         if (definedClassesByFile.has(fullPath)) {
                             const defaultSpecifier = node.specifiers.find(s => s.type === 'ImportDefaultSpecifier' || s.type === 'ImportNamespaceSpecifier');
                             if (defaultSpecifier) {
                                 moduleImports.set(defaultSpecifier.local.name, fullPath);
+                                console.log(`[DEBUG] Mapped import: ${defaultSpecifier.local.name} -> ${fullPath}`);
                             }
                         }
                     }
                 },
                 JSXAttribute: ({ node }) => {
+                    if (node.name.name === 'className') {
+                        console.log(`[DEBUG] Found className attribute in ${file}`);
+                        if (node.value && node.value.type === 'JSXExpressionContainer') {
+                            console.log(`[DEBUG] className has expression:`, node.value.expression.type);
+                        }
+                    }
                     // className={...} 내에서 static + dynamic 조합 추적 (정밀 개선)
                     if (node.name.name === 'className' && node.value && (node.value.type === 'JSXExpressionContainer')) {
                         let staticParents = new Set();
                         let foundDynamicParents = new Set();
-                        // 재귀적으로 BinaryExpression, TemplateLiteral 등 모두 탐색
+                        let foundDynamicModule = null;
+                        // 재귀적으로 BinaryExpression, TemplateLiteral, CallExpression 등 모두 탐색
                         function walk(expr, lastStatic) {
                             if (!expr) return;
+                            console.log(`[DEBUG] Walking expression type: ${expr.type}`);
                             if (expr.type === 'BinaryExpression' && expr.operator === '+') {
                                 walk(expr.left, lastStatic);
                                 walk(expr.right, lastStatic);
                             } else if (expr.type === 'TemplateLiteral') {
+                                console.log(`[DEBUG] Template literal with ${expr.expressions.length} expressions`);
                                 expr.expressions.forEach(e => walk(e, lastStatic));
+                            } else if (expr.type === 'CallExpression') {
+                                // classnames 라이브러리 지원 (cn, classNames 등)
+                                if (expr.callee.type === 'Identifier' && 
+                                    (expr.callee.name === 'cn' || expr.callee.name === 'classNames' || expr.callee.name === 'clsx')) {
+                                    console.log(`[DEBUG] Found classnames call: ${expr.callee.name}`);
+                                    expr.arguments.forEach(arg => walk(arg, lastStatic));
+                                }
                             } else if (expr.type === 'MemberExpression') {
+                                console.log(`[DEBUG] MemberExpression:`, {
+                                    object: expr.object.name,
+                                    computed: expr.computed,
+                                    propertyType: expr.property.type,
+                                    propertyName: expr.property.name || expr.property.value
+                                });
                                 if (expr.object.type === 'Identifier' && moduleImports.has(expr.object.name)) {
+                                    const modulePath = moduleImports.get(expr.object.name);
                                     if (expr.computed && expr.property.type !== 'StringLiteral') {
-                                        // 동적 접근: 직전 staticParents에 있는 모든 부모를 foundDynamicParents에 추가
+                                        console.log(`[DEBUG] Dynamic access detected: ${expr.object.name}[${expr.property.name || 'variable'}]`);
+                                        // 동적 접근: 해당 모듈의 staticParents에 있는 모든 부모를 foundDynamicParents에 추가
+                                        foundDynamicModule = modulePath;
                                         staticParents.forEach(p => foundDynamicParents.add(p));
                                     } else {
                                         let propertyName = expr.property.type === 'Identifier' ? expr.property.name : expr.property.value;
                                         staticParents.add(propertyName);
+                                        console.log(`[DEBUG] Static access: ${propertyName}`);
                                     }
                                 }
                             }
                         }
                         walk(node.value.expression, null);
-                        if (foundDynamicParents.size > 0 && ignoreDynamicClasses) {
-                            const modulePath = moduleImports.values().next().value;
-                            if (!dynamicParentsByFile.has(modulePath)) dynamicParentsByFile.set(modulePath, new Set());
+                        console.log(`[DEBUG] Walk completed:`, {
+                            staticParents: Array.from(staticParents),
+                            foundDynamicParents: Array.from(foundDynamicParents),
+                            foundDynamicModule,
+                            ignoreDynamicClasses
+                        });
+                        if (foundDynamicParents.size > 0 && ignoreDynamicClasses && foundDynamicModule) {
+                            console.log(`[DEBUG] Dynamic access detected in ${file}:`, {
+                                staticParents: Array.from(staticParents),
+                                foundDynamicParents: Array.from(foundDynamicParents),
+                                foundDynamicModule,
+                                parentToChildren: Array.from(parentToChildren.keys())
+                            });
+                            if (!dynamicParentsByFile.has(foundDynamicModule)) dynamicParentsByFile.set(foundDynamicModule, new Set());
                             foundDynamicParents.forEach(parent => {
                                 if (parentToChildren.has(parent)) {
-                                    dynamicParentsByFile.get(modulePath).add(parent);
+                                    dynamicParentsByFile.get(foundDynamicModule).add(parent);
+                                    console.log(`[DEBUG] Added ${parent} to dynamic parents for ${foundDynamicModule}`);
                                 }
                             });
                         }

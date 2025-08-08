@@ -1,6 +1,6 @@
 {
   "name": "style-sentry",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "main": "index.js",
   "bin": {
     "style-sentry": "./index.js"
@@ -32,6 +32,7 @@
     "@babel/parser": "^7.28.0",
     "@babel/traverse": "^7.28.0",
     "chalk": "^4.1.2",
+    "classnames": "^2.5.1",
     "commander": "^14.0.0",
     "glob": "^11.0.3",
     "postcss": "^8.5.6",
