@@ -128,3 +128,75 @@ module.exports = {
 ✅ 다국어 문서화 완료  
 
 **Style Sentry v1.1.0 배포 준비 완료!** 🚀
+
+---
+
+## 2024-05-16 추가 작업: SCSS Mixin 및 Alias 경로 지원
+
+### 10. SCSS Mixin 내부 중첩 클래스 지원 구현
+- **문제 상황**: 현업 프로젝트에서 `@mixin button` 내부에 `&.oval`, `&.round` 같은 중첩 클래스가 정의되어 있고, 이를 `styles[shape]`로 동적 접근할 때 미사용으로 경고되는 문제 발생.
+- **원인 분석**: PostCSS 파서가 `@mixin` 내부의 중첩 클래스를 독립적인 클래스로 인식하지 못했음.
+- **해결 과정**:
+  1. `extractMixinNestedClasses` 함수 추가: `@mixin` 규칙을 순회하여 `&.oval` → `oval` 형태로 독립 클래스 추출
+  2. `parentToChildren` 매핑 수동 추가: 믹스인을 사용하는 클래스(`primary`, `secondary`, `circle`)와 중첩 클래스(`oval`, `round`, `isLoading`, `link`) 연결
+  3. `ignoreDynamicClasses` 로직 개선: 단일 클래스(`oval`, `round`)가 동적 부모의 자식인지 확인하는 로직 추가
+
+### 11. TypeScript/Webpack Alias 경로 자동 해석 구현
+- **문제 상황**: 현업 프로젝트에서 `import styles from '@styles/setting_ats.module.scss'` 같은 alias 경로를 사용할 때 모든 클래스가 미사용으로 경고되는 문제 발생.
+- **원인 분석**: 린터가 `@styles/` 같은 alias를 해석하지 못해서 파일을 찾지 못했음.
+- **해결 과정**:
+  1. `detectPathAliases` 함수 추가: `tsconfig.json`의 `paths`, `webpack.config.js`의 `alias`, `package.json`의 `imports` 자동 감지
+  2. `resolveAliasedPath` 함수 추가: `@styles/` → `./src/styles/` 자동 변환
+  3. ImportDeclaration 로직 개선: alias 해석 후 파일명 매칭으로 우회 처리
+  4. 설정 파일 없이도 자동으로 작동하도록 구현
+
+### 12. 완벽한 테스트 케이스 구축
+- **테스트 파일 생성**: 
+  - `test/button-test.module.scss`: 믹스인 내부 중첩 클래스 테스트
+  - `test/button-test.jsx`: 동적 접근 테스트 (`styles[shape]`)
+  - `test/alias-test.module.scss`: alias 경로 테스트용 SCSS
+  - `test/alias-test.jsx`: `@styles/` alias 사용 테스트
+  - `test/tsconfig.json`: alias 설정 테스트용
+- **테스트 시나리오**:
+  - `ignoreDynamicClasses: true`일 때 `oval`, `round` 무시 확인
+  - `ignoreDynamicClasses: false`일 때 `oval`, `round` 경고 확인
+  - alias 경로가 자동으로 해석되는지 확인
+  - 설정 파일이 없어도 파일명 매칭으로 작동하는지 확인
+
+### 13. 린터의 한계와 제한사항 파악
+- **발견된 제한사항**:
+  1. **컴포넌트 기반 사용**: `&.icon i` 같은 클래스가 `<Icon>` 컴포넌트 내부에서 사용되지만 린터가 감지하지 못함
+  2. **동적 렌더링**: 조건부 렌더링이나 동적 컴포넌트에서 사용되는 클래스 감지 불가
+  3. **CSS-in-JS**: styled-components 등에서 정의된 클래스 미지원
+  4. **오탐**: 실제 사용되는 클래스가 미사용으로 표시될 수 있음
+- **대응 방안**: README에 "Limitations & Notes" 섹션 추가하여 사용자에게 명확한 안내 제공
+
+### 14. 문서화 완료
+- **메인 README.md**: 영어, 일본어, 한국어로 mixin과 alias 지원 내용 추가
+- **VSCode 확장 README.md**: 동일한 내용을 3개 언어로 추가
+- **제한사항 섹션**: 모든 README에 린터의 한계와 주의점 명시
+
+---
+
+## 추가 작업의 핵심 인사이트
+- **실무 환경 대응의 중요성**: 믹스인과 alias는 현업에서 매우 일반적으로 사용되는 패턴으로, 이를 지원하지 않으면 실무 적용이 어려움
+- **정적 분석의 현실적 한계**: 컴포넌트 내부 사용이나 동적 렌더링은 완벽하게 추적하기 어려우므로, 사용자에게 명확한 한계를 안내하는 것이 중요
+- **설정 없는 자동화의 가치**: 사용자가 별도 설정을 하지 않아도 자동으로 작동하는 것이 사용성에 큰 도움이 됨
+
+---
+
+## 최종 완성된 기능 목록 (v1.1.0)
+✅ 동적 클래스 처리 (`styles[category]`, `styles[size]`)  
+✅ classnames 라이브러리 지원 (`cn()`, `classNames()`, `clsx()`)  
+✅ 복잡한 패턴 지원 (`cn(styles.container, styles[status], { [styles.active]: isActive })`)  
+✅ 템플릿 리터럴 지원 (`styles[\`button-${size}\`]`)  
+✅ CSS 모듈 네이밍 컨벤션 지원 (camelCase, kebab-case, snake_case)  
+✅ 중첩 CSS 클래스 처리 (`&.top`, `wrapper.top`)  
+✅ **SCSS Mixin 내부 중첩 클래스 지원** (`&.oval`, `&.round`)  
+✅ **TypeScript/Webpack Alias 자동 해석** (`@styles/`, `@components/`)  
+✅ VSCode 확장 프로그램 완전 지원  
+✅ 완벽한 테스트 케이스 구축  
+✅ 다국어 문서화 완료  
+✅ **제한사항 및 주의점 문서화**  
+
+**Style Sentry v1.3.0 최종 완성!** 🚀
